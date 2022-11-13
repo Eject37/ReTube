@@ -1,17 +1,27 @@
 // ==UserScript==
 // @name         YouTube Fixer
 // @namespace    http://tampermonkey.net/
-// @version      1.0
+// @version      1.1
 // @description YouTube Fixer
 // @author       Eject
 // @match        *://*.youtube.com/*
-// @icon         https://www.google.com/s2/favicons?sz=64&domain=youtube.com
+// @icon         https://github.com/DaRKLoRDnote7/YouTube-Fixer/raw/main/31232.ico
 // @grant        none
 // ==/UserScript==
 
-FocusAndScrollFix()
+CustomIcon()
 Colors()
+FocusAndScrollFix()
 
+function CustomIcon() {
+    var link = document.querySelector("link[rel~='icon']");
+    if (!link) {
+        link = document.createElement('link');
+        link.rel = 'icon';
+        document.querySelector('head').children[0].appendChild(link);
+    }
+    link.href = 'https://github.com/DaRKLoRDnote7/YouTube-Fixer/raw/main/31232.ico';
+}
 function FocusAndScrollFix() {
     const player = document.querySelector('video.video-stream.html5-main-video')
 
@@ -47,10 +57,26 @@ var g = document.head.appendChild(document.createElement('style'))
 g.innerHTML = 'html[dark], [dark] {--yt-spec-static-brand-red: #719dd3}' // Цвет прогресса просмотренных видео
 
 while (true) {
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    document.querySelector('#logo-icon').children[0].querySelector('path.style-scope').style.fill = "#3c3c3c"
-    document.querySelector('#logo-icon').style.fill = "#c8c8c8"
+    await new Promise(resolve => setTimeout(resolve, 100))
+
+    try { document.querySelector('.html5-video-player').style.background = "#11161c" } catch { } // Цвет фона плеера
+
+    document.querySelectorAll('#logo-icon').forEach(x => {x.children[0].querySelector('path.style-scope').style.fill = "#3c3c3c"}) // Иконка ютуба
+    document.querySelectorAll('#logo-icon').forEach(x => {x.style.fill = "#c8c8c8"}) // Надпись возле иконки
+    document.querySelectorAll('#country-code').forEach(x => {x.style.display = "none"}) // Старна возле иконки
+
+    try { document.querySelector('.yt-spec-icon-badge-shape--type-notification .yt-spec-icon-badge-shape__badge').style.backgroundColor = "#426c9d" } catch { } // Задний цвет количества уведомлений
+    try { document.querySelectorAll('.ytp-swatch-color').forEach(x => {x.style.color = "#426c9d"}) } catch { } // Цвет надписи HD
+
+    //document.querySelectorAll('.ytp-menuitem[aria-checked=true] .ytp-menuitem-toggle-checkbox').forEach(x => {x.style.background = "yellow"})
+    var checkboxBackground = document.head.appendChild(document.createElement('style'))
+    checkboxBackground.innerHTML = '.ytp-menuitem[aria-checked=true] .ytp-menuitem-toggle-checkbox {background: #3e6bb4}'
+
+    document.querySelectorAll('#footer.ytd-guide-renderer > #vat-notice, #footer.ytd-guide-renderer > #copyright').forEach(x => {x.style.setProperty('display', 'none', 'important')})
+
+    document.querySelector('.ytp-play-progress').style.background = "#5785ba"
+    document.querySelectorAll('.ytp-swatch-background-color').forEach(x => {x.style.backgroundColor = '#5785ba'})
 
     var hdButton = document.head.appendChild(document.createElement('style'))
-    hdButton.innerHTML = '.ytp-settings-button.ytp-hd-quality-badge:after {background-color: #3e6bb4}'}
-}
+    hdButton.innerHTML = '.ytp-settings-button.ytp-hd-quality-badge:after {background-color: #3e6bb4}'
+}}
