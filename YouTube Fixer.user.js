@@ -19,7 +19,6 @@ function FocusAndScrollFix() {
     player.focus()
     scrollTo({top: 0, behavior: 'smooth'})}
 }
-
 async function Colors() {
 var background = document.head.appendChild(document.createElement('style'))
 background.innerHTML = 'html[dark], [dark] {--yt-spec-base-background: #1b222a}'
