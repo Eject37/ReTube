@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ReTube
 // @namespace    http://tampermonkey.net/
-// @version      1.2
+// @version      1.21
 // @description ReTube
 // @author       Eject
 // @match        *://*.youtube.com/*
@@ -99,6 +99,10 @@ while (true) {
     try { if (!getProp(document.querySelector('.ytp-menuitem[aria-checked=true] .ytp-menuitem-toggle-checkbox'), null, 'background').includes('rgb(62, 107, 180)')) {
     var checkboxBackground = document.head.appendChild(document.createElement('style'))
     checkboxBackground.innerHTML = '.ytp-menuitem[aria-checked=true] .ytp-menuitem-toggle-checkbox {background: #3e6bb4}' }} catch { } // Задний цвет тугл кнопок в настройках видео
+
+    try { if (!getProp(document.querySelector('.ytp-chrome-controls .ytp-button[aria-pressed]'), ':after', 'background-color').includes('rgb(62, 107, 180)')) {
+    var subtitlesBackgroundPanelColor = document.head.appendChild(document.createElement('style'))
+    subtitlesBackgroundPanelColor.innerHTML = '.ytp-chrome-controls .ytp-button[aria-pressed]:after {background-color: rgb(62, 107, 180)}' }} catch { } // Цвет полоски снизу включённых субтитров
 
     try { if (!getProp(document.querySelector('#footer.ytd-guide-renderer > #vat-notice, #footer.ytd-guide-renderer > #copyright'), null, 'display').includes('none')) {
     document.querySelectorAll('#footer.ytd-guide-renderer > #vat-notice, #footer.ytd-guide-renderer > #copyright').forEach(x => {x.style.setProperty('display', 'none', 'important')}) }} catch { } // Убирает копирайт с левой панели
