@@ -1,19 +1,19 @@
 // ==UserScript==
 // @name         ReTube
 // @namespace    http://tampermonkey.net/
-// @version      1.3
+// @version      1.1
 // @description ReTube
 // @author       Eject
 // @match        *://*.youtube.com/*
-// @icon         https://github.com/DaRKLoRDnote7/ReTube/raw/main/31232.ico
+// @icon         https://github.com/Eject37/ReTube/raw/main/31232.ico
 // @grant        none
 // ==/UserScript==
 
-CustomIcon()
-DateTimeCreated()
-Colors()
-RemoveNotificationNumber()
-FocusAndScrollFix()
+CustomIcon() // Синяя иконка ютуба
+DateTimeCreated() // Дата и время создания видео в конце названия
+Colors() // Все цвета
+RemoveNotificationNumber() // Убирает в заголовке страницы количество уведомлений
+FocusAndScrollFix() // При наведении на видео, берёт на себя фокус
 
 function CustomIcon() {
     var link = document.querySelector("link[rel~='icon']");
@@ -22,7 +22,7 @@ function CustomIcon() {
         link.rel = 'icon';
         document.querySelector('head').children[0].appendChild(link);
     }
-    link.href = 'https://github.com/DaRKLoRDnote7/ReTube/raw/main/31232.ico';
+    link.href = 'https://github.com/Eject37/ReTube/raw/main/31232.ico';
 }
 
 function DateTimeCreated() {
