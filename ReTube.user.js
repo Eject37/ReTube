@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name         ReTube
 // @namespace    http://tampermonkey.net/
-// @version      1.1
+// @version      1.2
 // @description ReTube
 // @author       Eject
 // @match        *://*.youtube.com/*
-// @icon         https://github.com/Eject37/ReTube/raw/main/31232.ico
+// @icon         https://github.com/Eject37/ReTube/raw/main/yt-favicon2.ico
 // @grant        none
 // ==/UserScript==
 
@@ -22,12 +22,11 @@ function CustomIcon() {
         link.rel = 'icon';
         document.querySelector('head').children[0].appendChild(link);
     }
-    link.href = 'https://github.com/Eject37/ReTube/raw/main/31232.ico';
+    //link.href = 'https://github.com/Eject37/ReTube/raw/main/31232.ico';
+    link.href = 'https://github.com/Eject37/ReTube/raw/main/yt-favicon2.ico';
 }
 
 function DateTimeCreated() {
-
-if (!window.location.href.includes('watch')) { return }
 
 function getVideoId() {
     const urlObject = new URL(window.location.href);
@@ -41,10 +40,21 @@ function getVideoId() {
         return urlObject.searchParams.get("v");
     }
 }
+function isVideoLoaded() { return ( document.querySelector(`ytd-watch-flexy[video-id='${getVideoId()}']`) !== null ); }
+
+var currentVideo = ''
+var oldVideoDate = ''
+var oldVideoName = ''
+var oldWebTabName = ''
+Dynamic()
+//document.addEventListener('yt-navigate-finish', Dynamic);
+
+function Dynamic() {
+if (!window.location.href.includes('watch')) { return }
+//if (currentVideo == getVideoId()) { return }
+//currentVideo = getVideoId()
 
 const api = 'AIzaSyDlRKyiwxqBIU8Yt2k6x7WlKQQJiz9YsnE'
-
-
 try { fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${getVideoId()}&key=${api}`).then((response) => {
     response.json().then((json) => {
         const dateCreated = json.items[0].snippet.publishedAt
@@ -55,6 +65,28 @@ try { fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${getV
         const time = full.split(' ')[1].split('.')[0]
         let video_date = `${day}.${month}.${year} ${time}`
 
+        /*var videoName = document.querySelectorAll('yt-formatted-string.style-scope.ytd-watch-metadata')[1]
+        videoName.textContent = videoName.textContent.replace(' • ' + oldVideoDate, '')
+        oldVideoDate = video_date
+
+        //videoName.textContent = videoName.textContent + ` • ${video_date}`
+        videoName.append(` • ${video_date}`)
+        oldVideoName = videoName.textContent + ` • ${video_date}`
+        oldWebTabName = document.title*/
+
+            /*let i = setInterval(function() {
+                if (isVideoLoaded) {
+                clearInterval(i)
+                //alert()
+                var videoName = document.querySelectorAll('yt-formatted-string.style-scope.ytd-watch-metadata')[1]
+                videoName.textContent = videoName.textContent.replace(' • ' + oldVideoDate, '')
+                oldVideoDate = video_date
+
+                videoName.textContent = videoName.textContent + ` • ${video_date}`
+                oldVideoName = videoName.textContent + ` • ${video_date}`
+                oldWebTabName = document.title
+            }}, 100);*/
+
         const interval = setInterval(setText, 50)
         function setText() {
             try { if (!document.querySelectorAll('yt-formatted-string.style-scope.ytd-watch-metadata')[1].textContent.includes(video_date)) {
@@ -62,9 +94,7 @@ try { fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${getV
             clearInterval(interval)
         }} catch { } }
     })
-}) } catch { }
-
-}
+}) } catch { }}}
 
 function RemoveNotificationNumber () {
     new MutationObserver((e) => {
@@ -92,6 +122,9 @@ text.innerHTML = 'html[darker-dark-theme][dark], [darker-dark-theme] [dark] {--y
 
 var notifyBackground = document.head.appendChild(document.createElement('style'))
 notifyBackground.innerHTML = 'html[dark], [dark] {--yt-spec-menu-background: #272f38c2}' // Цвет фона панели уведомлений
+
+var playlistVideoBackground = document.head.appendChild(document.createElement('style'))
+playlistVideoBackground.innerHTML = 'html[dark], [dark] {--yt-spec-raised-background: #272f38}' // Цвет фона добавления в плейлист
 
 var playlistBackground = document.head.appendChild(document.createElement('style'))
 playlistBackground.innerHTML = 'html[dark], [dark] {--yt-spec-brand-background-primary: #222b35; --yt-spec-general-background-a: #1b222a}' // Задние цвета активного плейлиста
@@ -198,6 +231,8 @@ function DynamicColors() {
     try { const doc = document.querySelectorAll('.ytp-swatch-background-color')
     if (!getProp(doc[doc.length - 1], null, 'background-color').includes('rgb(87, 133, 186)')) {
     document.querySelectorAll('.ytp-swatch-background-color').forEach(x => {x.style.backgroundColor = '#5785ba'}) }} catch { } // Круглая фигня прогресса видео
+
+    document.querySelectorAll('.yt-spec-button-shape-next--icon-leading').forEach(x => {if (x.ariaLabel.includes('клип')) { x.parentElement.parentElement.style.display = 'none' }})
 
     //await new Promise(resolve => setTimeout(resolve, 5))
 }}
