@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ReTube
 // @namespace    http://tampermonkey.net/
-// @version      2.0
+// @version      2.1
 // @description ReTube
 // @author       Eject
 // @match        *://*.youtube.com/*
@@ -88,8 +88,8 @@ try { fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${getV
 
         const interval = setInterval(setText, 50)
         function setText() {
-            try { if (!document.querySelectorAll('yt-formatted-string.style-scope.ytd-watch-metadata')[1].textContent.includes(video_date)) {
-            document.querySelectorAll('yt-formatted-string.style-scope.ytd-watch-metadata')[1].append(` • ${video_date}`)
+            try { if (!document.querySelectorAll('yt-formatted-string.style-scope.ytd-watch-metadata')[0].textContent.includes(video_date)) {
+            document.querySelectorAll('yt-formatted-string.style-scope.ytd-watch-metadata')[0].append(` • ${video_date}`)
             clearInterval(interval)
         }} catch { } }
     })
@@ -154,6 +154,9 @@ var panelComments = document.head.appendChild(document.createElement('style'))
 var removals = document.head.appendChild(document.createElement('style'))
 var backNextButtons = document.head.appendChild(document.createElement('style'))
 var videoPlayProgressBar = document.head.appendChild(document.createElement('style'))
+var liveMarker = document.head.appendChild(document.createElement('style'))
+var annotationChannel = document.head.appendChild(document.createElement('style'))
+var reactionControlPanel = document.head.appendChild(document.createElement('style'))
 
 
 background.innerHTML = 'html[dark], [dark] {--yt-spec-base-background: #1b222a}' // Цвет фона всего ютуба
@@ -196,12 +199,18 @@ panelComments.innerHTML = 'html[dark], [dark] {--yt-spec-outline: rgb(48, 58, 68
 removals.innerHTML = '#footer, #items > ytd-guide-entry-renderer:nth-child(4), #items > ytd-guide-entry-renderer:nth-child(3), #items > ytd-guide-entry-renderer:nth-child(2) {display: none}' // Убирает лишние элементы с левой панели
 backNextButtons.innerHTML = 'a.ytp-next-button.ytp-button, a.ytp-prev-button.ytp-button {display: none}' // Убирает кнопку вперёд и назад в плеере
 videoPlayProgressBar.innerHTML = '.ytp-swatch-background-color {background: rgb(87, 133, 186) !important}' // Полоска прогресса видео
+liveMarker.innerHTML = '.ytp-live-badge[disabled]:before {background: rgb(87, 133, 186) !important}' // Круглый значок 'В эфире'
+annotationChannel.innerHTML = '.annotation.annotation-type-custom.iv-branding {display: none}' // Аннотация канала в конце видео
+reactionControlPanel.innerHTML = '#reaction-control-panel {display: none}' // Аннотация канала в конце видео
 
 setInterval(function() {
     try { document.querySelectorAll('#top-level-buttons-computed > ytd-button-renderer > yt-button-shape > button').forEach(x => { if (x.ariaLabel.includes('Поделиться')) x.parentElement.parentElement.style.display = 'none'}) } catch { }
+    try { document.querySelectorAll('#top-level-buttons-computed > ytd-button-renderer > yt-button-shape > button').forEach(x => { if (x.ariaLabel.includes('Поділитися')) x.parentElement.parentElement.style.display = 'none'}) } catch { }
     try { document.querySelector('#flexible-item-buttons > ytd-download-button-renderer > ytd-button-renderer').parentElement.style.display = 'none' } catch { }
     try { document.querySelectorAll('#flexible-item-buttons > ytd-button-renderer > yt-button-shape > button').forEach(x => { if (x.ariaLabel.includes('Спасибо')) x.parentElement.parentElement.style.display = 'none'}) } catch { }
+    try { document.querySelectorAll('#flexible-item-buttons > ytd-button-renderer > yt-button-shape > button').forEach(x => { if (x.ariaLabel.includes('Дякую')) x.parentElement.parentElement.style.display = 'none'}) } catch { }
     try { document.querySelectorAll('.yt-spec-button-shape-next--icon-leading').forEach(x => {if (x.ariaLabel.includes('клип') || x.ariaLabel.includes('Поделиться')) { x.parentElement.parentElement.style.display = 'none' }}) } catch { }
+    try { document.querySelectorAll('.yt-spec-button-shape-next--icon-leading').forEach(x => {if (x.ariaLabel.includes('кліп') || x.ariaLabel.includes('Поділитися')) { x.parentElement.parentElement.style.display = 'none' }}) } catch { }
 }, 250)
 
 //document.querySelectorAll('#top-level-buttons-computed > ytd-button-renderer > yt-button-shape > button').forEach(x => { if (x.ariaLabel.includes('Поделиться')) x.parentElement.parentElement.style.display = 'none'})
