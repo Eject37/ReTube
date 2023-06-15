@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ReTube
 // @namespace    http://tampermonkey.net/
-// @version      2.1
+// @version      2.2
 // @description ReTube
 // @author       Eject
 // @match        *://*.youtube.com/*
@@ -157,6 +157,10 @@ var videoPlayProgressBar = document.head.appendChild(document.createElement('sty
 var liveMarker = document.head.appendChild(document.createElement('style'))
 var annotationChannel = document.head.appendChild(document.createElement('style'))
 var reactionControlPanel = document.head.appendChild(document.createElement('style'))
+var searchADS = document.head.appendChild(document.createElement('style'))
+var inLiveOverlay = document.head.appendChild(document.createElement('style'))
+var buttonWatchLater = document.head.appendChild(document.createElement('style'))
+var buttonAddWatchList = document.head.appendChild(document.createElement('style'))
 
 
 background.innerHTML = 'html[dark], [dark] {--yt-spec-base-background: #1b222a}' // Цвет фона всего ютуба
@@ -201,7 +205,11 @@ backNextButtons.innerHTML = 'a.ytp-next-button.ytp-button, a.ytp-prev-button.ytp
 videoPlayProgressBar.innerHTML = '.ytp-swatch-background-color {background: rgb(87, 133, 186) !important}' // Полоска прогресса видео
 liveMarker.innerHTML = '.ytp-live-badge[disabled]:before {background: rgb(87, 133, 186) !important}' // Круглый значок 'В эфире'
 annotationChannel.innerHTML = '.annotation.annotation-type-custom.iv-branding {display: none}' // Аннотация канала в конце видео
-reactionControlPanel.innerHTML = '#reaction-control-panel {display: none}' // Аннотация канала в конце видео
+reactionControlPanel.innerHTML = '#reaction-control-panel {display: none}' // Панель реакция на трансляции в чате
+searchADS.innerHTML = '.sbfl_a {display: none}' // Надпись пожаловаться на поисковые подсказки
+inLiveOverlay.innerHTML = 'html[dark], [dark] {--yt-spec-static-overlay-background-brand: rgb(75, 93, 127)}' // Кнопка/надпись на главной странице В эфире под видео
+buttonWatchLater.innerHTML = 'html[dark], [dark] {--yt-spec-static-overlay-background-heavy: rgb(9, 20, 32, 0.4)}' // Кнопка на видео добавить в смотреть позже
+buttonAddWatchList.innerHTML = '[role="button"][aria-label="Добавить в очередь"] {display: none}' // Кнопка на видео добавить в очередь
 
 setInterval(function() {
     try { document.querySelectorAll('#top-level-buttons-computed > ytd-button-renderer > yt-button-shape > button').forEach(x => { if (x.ariaLabel.includes('Поделиться')) x.parentElement.parentElement.style.display = 'none'}) } catch { }
