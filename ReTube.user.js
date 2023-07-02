@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ReTube
 // @namespace    http://tampermonkey.net/
-// @version      2.2
+// @version      2.3
 // @description ReTube
 // @author       Eject
 // @match        *://*.youtube.com/*
@@ -9,11 +9,26 @@
 // @grant        none
 // ==/UserScript==
 
+//FixSubscriptions() // Можно нажимать на кнопку подписок
 CustomIcon() // Синяя иконка ютуба
 //DateTimeCreated() // Дата и время создания видео в конце названия
 Colors() // Все цвета и украшения
 RemoveNotificationNumber() // Убирает в заголовке страницы количество уведомлений
 FocusAndScrollFix() // При наведении на видео, берёт на себя фокус
+
+function FixSubscriptions() {
+	window.onload = (event) => {
+  const subButton = document.querySelectorAll('#guide-section-title')[1]
+
+		subButton.onclick = () => { open('feed/subscriptions') }
+		subButton.onmouseover = () => {
+                subButton.style.cursor = 'pointer'
+                subButton.style.textDecoration = 'underline'
+            }
+		subButton.onmouseleave = () => { subButton.style.textDecoration = '' }
+		subButton.style.maxWidth = '40px'
+}
+}
 
 function CustomIcon() {
     var link = document.querySelector("link[rel~='icon']");
@@ -39,19 +54,14 @@ function getVideoId() {
         return urlObject.searchParams.get("v");
     }
 }
+
 function isVideoLoaded() { return ( document.querySelector(`ytd-watch-flexy[video-id='${getVideoId()}']`) !== null ); }
 
-var currentVideo = ''
-var oldVideoDate = ''
-var oldVideoName = ''
-var oldWebTabName = ''
 Dynamic()
 //document.addEventListener('yt-navigate-finish', Dynamic);
 
 function Dynamic() {
 if (!window.location.href.includes('watch')) { return }
-//if (currentVideo == getVideoId()) { return }
-//currentVideo = getVideoId()
 
 const api = 'AIzaSyDlRKyiwxqBIU8Yt2k6x7WlKQQJiz9YsnE'
 try { fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${getVideoId()}&key=${api}`).then((response) => {
@@ -63,28 +73,6 @@ try { fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${getV
         const year = full.split('.')[0]
         const time = full.split(' ')[1].split('.')[0]
         let video_date = `${day}.${month}.${year} ${time}`
-
-        /*var videoName = document.querySelectorAll('yt-formatted-string.style-scope.ytd-watch-metadata')[1]
-        videoName.textContent = videoName.textContent.replace(' • ' + oldVideoDate, '')
-        oldVideoDate = video_date
-
-        //videoName.textContent = videoName.textContent + ` • ${video_date}`
-        videoName.append(` • ${video_date}`)
-        oldVideoName = videoName.textContent + ` • ${video_date}`
-        oldWebTabName = document.title*/
-
-            /*let i = setInterval(function() {
-                if (isVideoLoaded) {
-                clearInterval(i)
-                //alert()
-                var videoName = document.querySelectorAll('yt-formatted-string.style-scope.ytd-watch-metadata')[1]
-                videoName.textContent = videoName.textContent.replace(' • ' + oldVideoDate, '')
-                oldVideoDate = video_date
-
-                videoName.textContent = videoName.textContent + ` • ${video_date}`
-                oldVideoName = videoName.textContent + ` • ${video_date}`
-                oldWebTabName = document.title
-            }}, 100);*/
 
         const interval = setInterval(setText, 50)
         function setText() {
@@ -161,6 +149,12 @@ var searchADS = document.head.appendChild(document.createElement('style'))
 var inLiveOverlay = document.head.appendChild(document.createElement('style'))
 var buttonWatchLater = document.head.appendChild(document.createElement('style'))
 var buttonAddWatchList = document.head.appendChild(document.createElement('style'))
+var buttonKeyboardSearch = document.head.appendChild(document.createElement('style'))
+var buttonAutoPlay = document.head.appendChild(document.createElement('style'))
+var buttonTranslationTV = document.head.appendChild(document.createElement('style'))
+var buttonMiniPlayer = document.head.appendChild(document.createElement('style'))
+var buttonBuyPremium = document.head.appendChild(document.createElement('style'))
+var buttonsInAccount = document.head.appendChild(document.createElement('style'))
 
 
 background.innerHTML = 'html[dark], [dark] {--yt-spec-base-background: #1b222a}' // Цвет фона всего ютуба
@@ -210,6 +204,12 @@ searchADS.innerHTML = '.sbfl_a {display: none}' // Надпись пожалов
 inLiveOverlay.innerHTML = 'html[dark], [dark] {--yt-spec-static-overlay-background-brand: rgb(75, 93, 127)}' // Кнопка/надпись на главной странице В эфире под видео
 buttonWatchLater.innerHTML = 'html[dark], [dark] {--yt-spec-static-overlay-background-heavy: rgb(9, 20, 32, 0.4)}' // Кнопка на видео добавить в смотреть позже
 buttonAddWatchList.innerHTML = '[role="button"][aria-label="Добавить в очередь"] {display: none}' // Кнопка на видео добавить в очередь
+buttonKeyboardSearch.innerHTML = '.gsst_a {display: none !important}' // Кнопка клавиатуры при поиске видео
+buttonAutoPlay.innerHTML = '.ytp-button:nth-of-type(6) {display: none !important}' // Кнопка автовоспроизвидения в плеере
+buttonTranslationTV.innerHTML = '.ytp-button.ytp-remote-button {display: none !important}' // Кнопка трансляции на телевизор в плеере
+buttonMiniPlayer.innerHTML = '.ytp-button.ytp-miniplayer-button {display: none !important}' // Кнопка мини-плеера в плеере
+buttonBuyPremium.innerHTML = '#premium-upsell-link, .ytd-guide-renderer.style-scope:nth-of-type(4) {display: none}' // Кнопка оформить youtube premium
+buttonsInAccount.innerHTML = 'yt-multi-page-menu-section-renderer:nth-child(5) {display: none}' // Кнопки справка и отправить отзыв в меню аккаунта
 
 setInterval(function() {
     try { document.querySelectorAll('#top-level-buttons-computed > ytd-button-renderer > yt-button-shape > button').forEach(x => { if (x.ariaLabel.includes('Поделиться')) x.parentElement.parentElement.style.display = 'none'}) } catch { }
