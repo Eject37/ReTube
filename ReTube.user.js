@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ReTube
 // @namespace    http://tampermonkey.net/
-// @version      2.3
+// @version      2.31
 // @description ReTube
 // @author       Eject
 // @match        *://*.youtube.com/*
@@ -138,6 +138,7 @@ var checkboxBackground = document.head.appendChild(document.createElement('style
 var subtitlesBackgroundPanelColor = document.head.appendChild(document.createElement('style'))
 var playlistCurrentVideoColor = document.head.appendChild(document.createElement('style'))
 var videoContextMenu = document.head.appendChild(document.createElement('style'))
+var videoContextMenuFixCheckbox = document.head.appendChild(document.createElement('style'))
 var panelComments = document.head.appendChild(document.createElement('style'))
 var removals = document.head.appendChild(document.createElement('style'))
 var backNextButtons = document.head.appendChild(document.createElement('style'))
@@ -193,6 +194,7 @@ checkboxBackground.innerHTML = '.ytp-menuitem[aria-checked=true] .ytp-menuitem-t
 subtitlesBackgroundPanelColor.innerHTML = '.ytp-chrome-controls .ytp-button[aria-pressed]:after {background-color: rgb(62, 107, 180) !important}' // Цвет полоски снизу включённых субтитров
 playlistCurrentVideoColor.innerHTML = 'ytd-playlist-panel-renderer#playlist {--yt-lightsource-secondary-title-color: rgb(201, 208, 211) !important; --yt-lightsource-primary-title-color: rgb(201, 208, 211) !important}' // Цвет текста активного видео в плейлисте (название + канал)
 videoContextMenu.innerHTML = '.ytp-popup.ytp-contextmenu {background: rgba(25, 31, 38, 0.85); border-radius: 10px; backdrop-filter: blur(5px)}' // Задний цвет и закругление панели ПКМ по видео
+videoContextMenuFixCheckbox.innerHTML = '.ytp-contextmenu .ytp-menuitem[aria-checked=true] .ytp-menuitem-toggle-checkbox {background: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIHZpZXdCb3g9IjAgMCAyNCAyNCIgdmVyc2lvbj0iMS4xIj48cGF0aCBkPSJNOSAxNi4yTDQuOCAxMmwtMS40IDEuNEw5IDE5IDIxIDdsLTEuNC0xLjRMOSAxNi4yeiIgZmlsbD0iI2ZmZiIgLz48L3N2Zz4=) !important;}' // Фикс отображения чекбокса
 panelComments.innerHTML = 'html[dark], [dark] {--yt-spec-outline: rgb(48, 58, 68)}' // Панель упорядочить в комментариях
 removals.innerHTML = '#footer, #items > ytd-guide-entry-renderer:nth-child(4), #items > ytd-guide-entry-renderer:nth-child(3), #items > ytd-guide-entry-renderer:nth-child(2) {display: none}' // Убирает лишние элементы с левой панели
 backNextButtons.innerHTML = 'a.ytp-next-button.ytp-button, a.ytp-prev-button.ytp-button {display: none}' // Убирает кнопку вперёд и назад в плеере
