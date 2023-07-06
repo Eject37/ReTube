@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ReTube
 // @namespace    http://tampermonkey.net/
-// @version      2.31
+// @version      2.32
 // @description ReTube
 // @author       Eject
 // @match        *://*.youtube.com/*
@@ -207,7 +207,7 @@ inLiveOverlay.innerHTML = 'html[dark], [dark] {--yt-spec-static-overlay-backgrou
 buttonWatchLater.innerHTML = 'html[dark], [dark] {--yt-spec-static-overlay-background-heavy: rgb(9, 20, 32, 0.4)}' // Кнопка на видео добавить в смотреть позже
 buttonAddWatchList.innerHTML = '[role="button"][aria-label="Добавить в очередь"] {display: none}' // Кнопка на видео добавить в очередь
 buttonKeyboardSearch.innerHTML = '.gsst_a {display: none !important}' // Кнопка клавиатуры при поиске видео
-buttonAutoPlay.innerHTML = '.ytp-button:nth-of-type(6) {display: none !important}' // Кнопка автовоспроизвидения в плеере
+buttonAutoPlay.innerHTML = 'button[title*="Автовоспроизведение"] {display: none !important}' // Кнопка автовоспроизвидения в плеере
 buttonTranslationTV.innerHTML = '.ytp-button.ytp-remote-button {display: none !important}' // Кнопка трансляции на телевизор в плеере
 buttonMiniPlayer.innerHTML = '.ytp-button.ytp-miniplayer-button {display: none !important}' // Кнопка мини-плеера в плеере
 buttonBuyPremium.innerHTML = '#premium-upsell-link, .ytd-guide-renderer.style-scope:nth-of-type(4) {display: none}' // Кнопка оформить youtube premium
