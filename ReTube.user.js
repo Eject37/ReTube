@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ReTube
 // @namespace    http://tampermonkey.net/
-// @version      2.32
+// @version      2.4
 // @description ReTube
 // @author       Eject
 // @match        *://*.youtube.com/*
@@ -126,6 +126,7 @@ var yt_logo_icon2 = document.head.appendChild(document.createElement('style'))
 var voice_search_button = document.head.appendChild(document.createElement('style'))
 var yt_logo_text = document.head.appendChild(document.createElement('style'))
 var player_background = document.head.appendChild(document.createElement('style'))
+var player_background_fullScreen = document.head.appendChild(document.createElement('style'))
 var settings_background_color = document.head.appendChild(document.createElement('style'))
 var yt_icon_country = document.head.appendChild(document.createElement('style'))
 var yt_notificationBadge_background = document.head.appendChild(document.createElement('style'))
@@ -156,6 +157,8 @@ var buttonTranslationTV = document.head.appendChild(document.createElement('styl
 var buttonMiniPlayer = document.head.appendChild(document.createElement('style'))
 var buttonBuyPremium = document.head.appendChild(document.createElement('style'))
 var buttonsInAccount = document.head.appendChild(document.createElement('style'))
+var shortsIcon = document.head.appendChild(document.createElement('style'))
+var searchboxText = document.head.appendChild(document.createElement('style'))
 
 
 background.innerHTML = 'html[dark], [dark] {--yt-spec-base-background: #1b222a}' // Цвет фона всего ютуба
@@ -177,11 +180,12 @@ d.innerHTML = 'html[dark], [dark] {--ytd-searchbox-legacy-border-color: #60677b4
 f.innerHTML = 'html[dark], [dark] {--ytd-searchbox-legacy-button-border-color: #60677b42}'
 g.innerHTML = 'html[dark], [dark] {--yt-spec-static-brand-red: #719dd3}' // Цвет прогресса просмотренных видео
 videoTimePanel.innerHTML = 'ytd-thumbnail-overlay-time-status-renderer.style-scope.ytd-thumbnail {background: #2d3844ba}' // На главной странице в каждом видео фон рамки с длительносьтю видео
-yt_logo_icon.innerHTML = 'svg.external-icon > svg > g > path:nth-child(1) {fill: rgb(60, 60, 60)}' // Иконка ютуба
-yt_logo_icon2.innerHTML = '#logo-icon > svg > g > g:nth-child(1) > path:nth-child(1) {fill: rgb(60, 60, 60)}' // Иконка ютуба (старый дизайн)
+yt_logo_icon.innerHTML = 'svg.external-icon > svg > g > path:nth-child(1) {fill: rgb(60, 65, 70)}' // Иконка ютуба
+yt_logo_icon2.innerHTML = '#logo-icon > svg > g > g:nth-child(1) > path:nth-child(1) {fill: rgb(60, 65, 70)}' // Иконка ютуба (старый дизайн)
 voice_search_button.innerHTML = '#voice-search-button {display: none}' // Кнопка голосового поиска
 yt_logo_text.innerHTML = 'html[dark], [dark] {--yt-spec-wordmark-text: rgb(200, 200, 200)}' // Надпись возле иконки ютуба
 player_background.innerHTML = '.html5-video-player {background: rgb(17, 22, 28)}' // Цвет фона плеера
+player_background_fullScreen.innerHTML = '.html5-video-player[aria-label*="в "] {background: rgb(0, 0, 0)}' // Цвет фона плеера в полном экране
 settings_background_color.innerHTML = '#ytp-id-18, #ytp-id-19 {background: rgba(27, 34, 42, 0.85); backdrop-filter: blur(5px)}' // Цвет фона настроек видео
 yt_icon_country.innerHTML = '#country-code {display: none}' // Старна возле иконки
 yt_notificationBadge_background.innerHTML = '.yt-spec-icon-badge-shape--type-notification .yt-spec-icon-badge-shape__badge {background-color: rgb(66, 108, 157)}' // Цвет бэйджа количества уведомлений
@@ -198,7 +202,7 @@ videoContextMenuFixCheckbox.innerHTML = '.ytp-contextmenu .ytp-menuitem[aria-che
 panelComments.innerHTML = 'html[dark], [dark] {--yt-spec-outline: rgb(48, 58, 68)}' // Панель упорядочить в комментариях
 removals.innerHTML = '#footer, #items > ytd-guide-entry-renderer:nth-child(4), #items > ytd-guide-entry-renderer:nth-child(3), #items > ytd-guide-entry-renderer:nth-child(2) {display: none}' // Убирает лишние элементы с левой панели
 backNextButtons.innerHTML = 'a.ytp-next-button.ytp-button, a.ytp-prev-button.ytp-button {display: none}' // Убирает кнопку вперёд и назад в плеере
-videoPlayProgressBar.innerHTML = '.ytp-swatch-background-color {background: rgb(87, 133, 186) !important}' // Полоска прогресса видео
+videoPlayProgressBar.innerHTML = '.ytp-swatch-background-color {background: rgb(87, 133, 186) !important}' // Полоска прогресса видео filter: drop-shadow(0 0 7px rgba(87,133,186,0.7));
 liveMarker.innerHTML = '.ytp-live-badge[disabled]:before {background: rgb(87, 133, 186) !important}' // Круглый значок 'В эфире'
 annotationChannel.innerHTML = '.annotation.annotation-type-custom.iv-branding {display: none}' // Аннотация канала в конце видео
 reactionControlPanel.innerHTML = '#reaction-control-panel {display: none}' // Панель реакция на трансляции в чате
@@ -212,6 +216,49 @@ buttonTranslationTV.innerHTML = '.ytp-button.ytp-remote-button {display: none !i
 buttonMiniPlayer.innerHTML = '.ytp-button.ytp-miniplayer-button {display: none !important}' // Кнопка мини-плеера в плеере
 buttonBuyPremium.innerHTML = '#premium-upsell-link, .ytd-guide-renderer.style-scope:nth-of-type(4) {display: none}' // Кнопка оформить youtube premium
 buttonsInAccount.innerHTML = 'yt-multi-page-menu-section-renderer:nth-child(5) {display: none}' // Кнопки справка и отправить отзыв в меню аккаунта
+shortsIcon.innerHTML = '#icon > yt-icon-shape > icon-shape > div > svg > g > path {fill: #50505f}' // Иконка YouTube Shorts при поиске видео
+searchboxText.innerHTML = 'html[dark], [dark] {--ytd-searchbox-text-color: rgb(201, 208, 211)}' // Цвет текста в поисковой строке
+
+
+var font = document.head.appendChild(document.createElement('style'))
+var font2 = document.head.appendChild(document.createElement('style'))
+var font3 = document.head.appendChild(document.createElement('style'))
+var font4 = document.head.appendChild(document.createElement('style'))
+var font5 = document.head.appendChild(document.createElement('style'))
+var font6 = document.head.appendChild(document.createElement('style'))
+var font7 = document.head.appendChild(document.createElement('style'))
+var font8 = document.head.appendChild(document.createElement('style'))
+
+font.innerHTML = '@import url(https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap);'
+font2.innerHTML = 'yt-formatted-string.style-scope.ytd-rich-grid-media, span.style-scope.ytd-video-meta-block {font-family: Ubuntu !important; font-weight: 400 !important; font-style: normal !important;}'
+font3.innerHTML = 'span.style-scope.ytd-compact-radio-renderer {font-family: Ubuntu !important; font-weight: 700 !important; font-style: normal !important;}'
+font4.innerHTML = 'ytd-rich-grid-renderer.style-scope.ytd-two-column-browse-results-renderer, ytd-guide-section-renderer.style-scope.ytd-guide-renderer {font-family: Ubuntu !important;}'
+font5.innerHTML = 'div.style-scope.ytd-rich-grid-row {font-weight: 400 !important;}'
+font6.innerHTML = 'span.style-scope.ytd-comment-renderer {font-family: Ubuntu !important; font-weight: 500 !important;}'
+font7.innerHTML = 'yt-formatted-string.style-scope.ytd-toggle-button-renderer.style-default-active {font-family: Ubuntu !important; font-weight: 700 !important;}'
+
+font8.innerHTML = 'a.yt-simple-endpoint.style-scope.yt-formatted-string, tp-yt-paper-item.style-scope.ytd-guide-entry-renderer, iron-selector.style-scope.ytd-feed-filter-chip-bar-renderer, ' +
+	'yt-formatted-string.title.style-scope.ytd-guide-entry-renderer, span.style-scope.ytd-rich-grid-slim-media, yt-formatted-string.style-scope.ytd-video-primary-info-renderer, div.style-scope.ytd-video-primary-info-renderer, ' +
+	'div.top-level-buttons.style-scope.ytd-menu-renderer, div.style-scope.ytd-expander, a.yt-simple-endpoint.style-scope.ytd-rich-metadata-renderer, div.style-scope.ytd-rich-metadata-renderer, ' +
+	'yt-formatted-string.less-button.style-scope.ytd-video-secondary-info-renderer, span.style-scope.yt-formatted-string, div.style-scope.yt-dropdown-menu, yt-formatted-string.style-scope.ytd-subscribe-button-renderer, ' +
+	'yt-formatted-string.style-scope.ytd-button-renderer.style-suggestive.size-default, span.style-scope.ytd-compact-video-renderer, yt-formatted-string.style-scope.ytd-channel-name, ' +
+	'yt-formatted-string.style-scope.ytd-button-renderer.style-default.size-default, yt-formatted-string.style-scope.ytd-toggle-button-renderer.style-text, yt-formatted-string.style-scope.yt-chip-cloud-chip-renderer, ' +
+	'span.style-scope.ytd-compact-playlist-renderer, yt-formatted-string.message.style-scope.ytd-notification-renderer, yt-formatted-string.style-scope.ytd-simple-menu-header-renderer, ' +
+	'yt-formatted-string.style-scope.ytd-compact-link-renderer, yt-formatted-string.style-scope.ytd-c4-tabbed-header-renderer, yt-formatted-string.title.style-scope.ytd-recognition-shelf-renderer, ' +
+	'yt-formatted-string.subtitle.style-scope.ytd-recognition-shelf-renderer, span.style-scope.ytd-shelf-renderer, yt-formatted-string.style-scope.ytd-button-renderer.style-text.size-default, ' +
+	'a.yt-simple-endpoint.style-scope.ytd-grid-video-renderer, yt-formatted-string.can-be-empty.style-scope.ytd-shelf-renderer, span.style-scope.ytd-grid-video-renderer, span.style-scope.ytd-badge-supported-renderer' +
+	'yt-formatted-string.style-scope.ytd-channel-renderer, span.style-scope.ytd-channel-renderer, div.tab-content.style-scope.tp-yt-paper-tab, yt-formatted-string.style-scope.ytd-channel-about-metadata-renderer, ' +
+	'yt-formatted-string.subheadline.style-scope.ytd-channel-about-metadata-renderer, div.style-scope.ytd-c4-tabbed-header-renderer, div.banner-visible-area.style-scope.ytd-c4-tabbed-header-renderer, ' +
+	'ytd-browse.style-scope.ytd-page-manager, #search-input input, span.style-scope.ytd-rich-shelf-renderer, div span b, div div b, div.sbsb_a, span.sbpqs_a, li.sbsb_c.gsfs, ' +
+	'yt-formatted-string.style-scope.ytd-reel-player-header-renderer, yt-formatted-string.style-scope.ytd-button-renderer, yt-formatted-string.style-scope.ytd-comment-renderer, div.style-scope.yt-formatted-string, ' +
+	'div.style-scope.ytd-watch-flexy, yt-formatted-string.more-button.style-scope.ytd-video-secondary-info-renderer, yt-formatted-string.style-scope.ytd-sponsorships-tier-renderer, ' +
+	'yt-formatted-string.style-scope.ytd-sponsorships-offer-renderer, div.scrollable.style-scope.tp-yt-paper-dialog-scrollable, yt-formatted-string.style-scope.ytd-sponsorships-perk-renderer, ' +
+	'div.header.style-scope.ytd-playlist-panel-renderer, yt-formatted-string.title.style-scope.ytd-playlist-panel-renderer, yt-formatted-string.publisher.style-scope.ytd-playlist-panel-renderer, ' +
+	'span.style-scope.ytd-playlist-panel-video-renderer, button.style-scope.yt-icon-button, yt-formatted-string.style-scope.ytd-button-renderer.style-primary.size-default, span.view-count.style-scope.ytd-video-view-count-renderer, ' +
+	'yt-formatted-string.style-scope.ytd-video-owner-renderer, button.ytp-button.ytp-settings-button.ytp-hd-quality-badge, div.ytp-bezel-text-wrapper, span.ytp-time-duration, span.ytp-time-current, span.ytp-time-remaining-duration, ' +
+	'div.ytp-left-controls, span.ytp-time-separator, a.yt-simple-endpoint.style-scope.ytd-playlist-video-renderer, div.ytp-chapter-title-content, span.ytp-time-display.notranslate, a.yt-simple-endpoint.style-scope.ytd-video-renderer, ' +
+	'yt-formatted-string.style-scope.ytd-video-renderer, a.yt-simple-endpoint.style-scope.ytd-grid-playlist-renderer, span.ytp-caption-segment, a.ytp-title-link.yt-uix-sessionlink.ytp-title-fullerscreen-link, div.ytp-menuitem-label ' +
+	'{font-family: Ubuntu !important; font-weight: 400 !important;}'
 
 setInterval(function() {
     try { document.querySelectorAll('#top-level-buttons-computed > ytd-button-renderer > yt-button-shape > button').forEach(x => { if (x.ariaLabel.includes('Поделиться')) x.parentElement.parentElement.style.display = 'none'}) } catch { }
@@ -221,6 +268,7 @@ setInterval(function() {
     try { document.querySelectorAll('#flexible-item-buttons > ytd-button-renderer > yt-button-shape > button').forEach(x => { if (x.ariaLabel.includes('Дякую')) x.parentElement.parentElement.style.display = 'none'}) } catch { }
     try { document.querySelectorAll('.yt-spec-button-shape-next--icon-leading').forEach(x => {if (x.ariaLabel.includes('клип') || x.ariaLabel.includes('Поделиться')) { x.parentElement.parentElement.style.display = 'none' }}) } catch { }
     try { document.querySelectorAll('.yt-spec-button-shape-next--icon-leading').forEach(x => {if (x.ariaLabel.includes('кліп') || x.ariaLabel.includes('Поділитися')) { x.parentElement.parentElement.style.display = 'none' }}) } catch { }
+	try { document.querySelector('.searchbox').textContent = document.querySelector('.searchbox').textContent.replace('webkit-input-placeholder{color:#888}', 'webkit-input-placeholder{color:rgb(151, 158, 161)}') } catch { }
 }, 250)
 
 //document.querySelectorAll('#top-level-buttons-computed > ytd-button-renderer > yt-button-shape > button').forEach(x => { if (x.ariaLabel.includes('Поделиться')) x.parentElement.parentElement.style.display = 'none'})
