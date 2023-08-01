@@ -1,48 +1,50 @@
 // ==UserScript==
 // @name         ReTube
 // @namespace    http://tampermonkey.net/
-// @version      3.1
+// @version      3.11
 // @description ReTube
 // @author       Eject
 // @match        *://*.youtube.com/*
 // @icon          https://github.com/Eject37/ReTube/raw/main/yt-favicon2.ico
 // @updateURL  https://github.com/Eject37/ReTube/raw/main/ReTube.user.js
 // @downloadURL  https://github.com/Eject37/ReTube/raw/main/ReTube.user.js
-// @run-at document-start
-// @grant GM.setValue
-// @grant GM.getValue
+// @grant GM_getValue
+// @grant GM_setValue
 // ==/UserScript==
 
 (async () => {
-	var RTfirstLaunch = await GM.getValue('rt-firstLaunch')
-	var RTcolors = await GM.getValue('rt-colors') == 'true'
-	var RTanimateLoad = await GM.getValue('rt-animateLoad') == 'true'
-	var RThideAllTrash = await GM.getValue('rt-hideAllTrash') == 'true'
-	var RTwatchedVideo = await GM.getValue('rt-watchedVideo') == 'true'
-	var RTbetterFont = await GM.getValue('rt-betterFont') == 'true'
-	var RTvideoDateCreated = await GM.getValue('rt-videoDateCreated') == 'true'
-	var RTfocusFix = await GM.getValue('rt-focusFix') == 'true'
-	var RTnotificationsRemove = await GM.getValue('rt-notificationsRemove') == 'true'
-	var RTcustomTitleIcon = await GM.getValue('rt-customTitleIcon') == 'true'
-	var RTSettingsDateOnVideoBackgroundChange = await GM.getValue('rt-settings-dateOnVideoBackgroundChange') == 'true'
-	var RTColorWatchedLabelBackground = await GM.getValue('rt-color-watchedLabelBackground') ?? '#343a41'
-	var RTColorWatchedBackground = await GM.getValue('rt-color-watchedBackground') ?? '#ffffff'
+	var RTfirstLaunch = await GM_getValue('rt-firstLaunch')
+	var RTcolors = await GM_getValue('rt-colors') == 'true'
+	var RTanimateLoad = await GM_getValue('rt-animateLoad') == 'true'
+	var RThideAllTrash = await GM_getValue('rt-hideAllTrash') == 'true'
+	var RTwatchedVideo = await GM_getValue('rt-watchedVideo') == 'true'
+	var RTbetterFont = await GM_getValue('rt-betterFont') == 'true'
+	var RTvideoDateCreated = await GM_getValue('rt-videoDateCreated') == 'true'
+	var RTfocusFix = await GM_getValue('rt-focusFix') == 'true'
+	var RTnotificationsRemove = await GM_getValue('rt-notificationsRemove') == 'true'
+	var RTcustomTitleIcon = await GM_getValue('rt-customTitleIcon') == 'true'
+	var RTSettingsDateOnVideoBackgroundChange = await GM_getValue('rt-settings-dateOnVideoBackgroundChange') == 'true'
+	var RTColorWatchedLabelBackground = await GM_getValue('rt-color-watchedLabelBackground') ?? '#343a41'
+	var RTColorWatchedBackground = await GM_getValue('rt-color-watchedBackground') ?? '#ffffff'
 
 	if (RTanimateLoad) {
 		const animationStyle = document.head.appendChild(document.createElement('style'))
 		animationStyle.id = 'rtAnim'
 		animationStyle.innerHTML += 'body, ytd-app, #background.ytd-masthead, #container.ytd-searchbox, #chips-wrapper.ytd-feed-filter-chip-bar-renderer, yt-chip-cloud-chip-renderer[chip-style=STYLE_HOME_FILTER], yt-chip-cloud-chip-renderer[chip-style=STYLE_REFRESH_TO_NOVEL_CHIP], #guide-content.ytd-app, ytd-mini-guide-renderer, ytd-mini-guide-entry-renderer, #description.ytd-watch-metadata, .yt-spec-button-shape-next--mono.yt-spec-button-shape-next--tonal, yt-chip-cloud-chip-renderer[chip-style=STYLE_DEFAULT], .ytp-swatch-background-color, .header.ytd-playlist-panel-renderer, .badge-style-type-medium-grey.ytd-badge-supported-renderer, .playlist-items.ytd-playlist-panel-renderer, ytd-playlist-panel-video-renderer[selected][use-color-palette]' +
-			'{transition: background-color 1s cubic-bezier(.21,.98,1,1); transition-delay: 0.5s; animation: 1s show cubic-bezier(0, 0, 0.5, 1)} @keyframes show { 0% { opacity: 0; } 50% { opacity: 0; } 95% { opacity: 0.95; } 100% { opacity: 1; } }'
+			'{transition: background-color 1s cubic-bezier(.21,.98,1,1); transition-delay: 1.25s; animation: 1s show cubic-bezier(0, 0, 0.5, 1)} @keyframes show { 0% { opacity: 0; } 50% { opacity: 0; } 95% { opacity: 0.95; } 100% { opacity: 1; } }'
 	}
 
-	waitSelector('#player-css').then(() => ReTube())
+	if (RTvideoDateCreated) { document.addEventListener('yt-navigate-finish', DateTimeCreated) }
+
+	if (document.readyState !== 'loading') ReTube()
+	else document.addEventListener('DOMContentLoaded', ReTube)
+
 	async function ReTube() {
 		if (!RTfirstLaunch) {
 			alert('ReTube.\nЧто-бы открыть меню настроек, нажмите F2 находясь на сайте ютуба.')
-			GM.setValue('rt-firstLaunch', 'yes')
+			GM_setValue('rt-firstLaunch', 'yes')
 		}
 
-		if (RTvideoDateCreated) { document.addEventListener('yt-navigate-finish', function () { DateTimeCreated() }) }
 		if (RTcustomTitleIcon) CustomIcon() // Синяя иконка ютуба
 		if (RTnotificationsRemove) RemoveNotificationNumber() // Убирает в заголовке страницы количество уведомлений
 		if (RTfocusFix) FocusAndScrollFix() // При наведении на видео, берёт на себя фокус
@@ -195,8 +197,11 @@
 				'.ytrp_rb_bg_bottom {bottom: unset !important; top: 0 !important;}' +
 				'html .resume-playback-background, html  .resume-playback-progress-bar, html ytd-thumbnail-overlay-resume-playback-renderer {top: unset !important; bottom: 0 !important;}' +
 				'.ytd-playlist-panel-video-renderer #progress.ytd-thumbnail-overlay-resume-playback-renderer::after {width: 92px; height: 48px; top: -52px !important; padding: 4px !important;}' +
+				'.ytd-playlist-video-renderer #progress.ytd-thumbnail-overlay-resume-playback-renderer::after {top: -52px; padding: 4px}' +
 				'.ytd-playlist-panel-video-renderer #progress.ytd-thumbnail-overlay-resume-playback-renderer::before {top: -52px; font-size: 9px; line-height: 1rem; margin: 4px; padding: 4px;}' +
+				'.ytd-playlist-video-renderer #progress.ytd-thumbnail-overlay-resume-playback-renderer::before {top: -83px; font-size: 9px; line-height: 1rem; margin: 4px; padding: 4px;}' +
 				'.ytd-playlist-panel-video-renderer:hover .ytd-playlist-panel-video-renderer #progress.ytd-thumbnail-overlay-resume-playback-renderer::before, .ytd-playlist-panel-video-renderer:hover .ytd-playlist-panel-video-renderer #progress.ytd-thumbnail-overlay-resume-playback-renderer::after {display: none;}' +
+				'.ytd-playlist-video-renderer:hover .ytd-playlistl-video-renderer #progress.ytd-thumbnail-overlay-resume-playback-renderer::before, .ytd-playlist-video-renderer:hover .ytd-playlist-video-renderer #progress.ytd-thumbnail-overlay-resume-playback-renderer::after {display: none;}' +
 				`.ytd-rich-grid-media #progress.ytd-thumbnail-overlay-resume-playback-renderer, .ytd-search ytd-video-renderer #progress.ytd-thumbnail-overlay-resume-playback-renderer {--label-color: ${RTColorWatchedLabelBackground + '80'}}` +
 				`.ytd-rich-grid-media #progress.ytd-thumbnail-overlay-resume-playback-renderer::before, .ytd-search ytd-video-renderer #progress.ytd-thumbnail-overlay-resume-playback-renderer::before {content: "ПРОСМОТРЕНО"; background-color: var(--label-color); font-size: 14px; color: white; position: absolute; z-index: 1;left: 2px; opacity: 1; letter-spacing: 0.5px;font-weight: 500; line-height: 1.5rem; margin: -65px 10px; padding: 4px 5px; border-radius: 9px; backdrop-filter: blur(4px);}` +
 				`.ytd-rich-grid-media #progress.ytd-thumbnail-overlay-resume-playback-renderer, .ytd-search #progress.ytd-thumbnail-overlay-resume-playback-renderer {--background-color: ${RTColorWatchedBackground + '80'}}` +
@@ -269,19 +274,19 @@
 			color2.value = RTColorWatchedBackground
 
 			document.querySelector('.retube-button-save').addEventListener('click', function () {
-				GM.setValue('rt-colors', checkboxMain.checked ? 'true' : 'false')
-				GM.setValue('rt-animateLoad', checkboxAnimateLoad.checked ? 'true' : 'false')
-				GM.setValue('rt-hideAllTrash', checkbox0.checked ? 'true' : 'false')
-				GM.setValue('rt-watchedVideo', checkbox1.checked ? 'true' : 'false')
-				GM.setValue('rt-betterFont', checkbox2.checked ? 'true' : 'false')
-				GM.setValue('rt-videoDateCreated', checkbox3.checked ? 'true' : 'false')
-				GM.setValue('rt-focusFix', checkbox4.checked ? 'true' : 'false')
-				GM.setValue('rt-notificationsRemove', checkbox5.checked ? 'true' : 'false')
-				GM.setValue('rt-customTitleIcon', checkbox6.checked ? 'true' : 'false')
+				GM_setValue('rt-colors', checkboxMain.checked ? 'true' : 'false')
+				GM_setValue('rt-animateLoad', checkboxAnimateLoad.checked ? 'true' : 'false')
+				GM_setValue('rt-hideAllTrash', checkbox0.checked ? 'true' : 'false')
+				GM_setValue('rt-watchedVideo', checkbox1.checked ? 'true' : 'false')
+				GM_setValue('rt-betterFont', checkbox2.checked ? 'true' : 'false')
+				GM_setValue('rt-videoDateCreated', checkbox3.checked ? 'true' : 'false')
+				GM_setValue('rt-focusFix', checkbox4.checked ? 'true' : 'false')
+				GM_setValue('rt-notificationsRemove', checkbox5.checked ? 'true' : 'false')
+				GM_setValue('rt-customTitleIcon', checkbox6.checked ? 'true' : 'false')
 
-				GM.setValue('rt-settings-dateOnVideoBackgroundChange', checkboxSettings1.checked ? 'true' : 'false')
-				GM.setValue('rt-color-watchedLabelBackground', color1.value)
-				GM.setValue('rt-color-watchedBackground', color2.value)
+				GM_setValue('rt-settings-dateOnVideoBackgroundChange', checkboxSettings1.checked ? 'true' : 'false')
+				GM_setValue('rt-color-watchedLabelBackground', color1.value)
+				GM_setValue('rt-color-watchedBackground', color2.value)
 
 				location.reload();
 			})
@@ -530,5 +535,5 @@
 			}
 		});
 	}
-})();
+})()
 //await new Promise(resolve => setTimeout(resolve, 5))
