@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ReTube
 // @namespace    http://tampermonkey.net/
-// @version      4.0.0
+// @version      4.0.1
 // @description ReTube
 // @author       Eject
 // @match        *://*.youtube.com/*
@@ -188,7 +188,7 @@
 			//#endregion
 			//#region Таб Цвета
 			document.querySelector('#retube-tab2').insertAdjacentHTML('beforeend', '<div><label class="retube-label"><input type="checkbox" id="rt-checkboxMain"></input>Перекрасить YouTube</label></div>')
-			document.querySelector('#retube-tab2').insertAdjacentHTML('beforeend', `<div class="rt-colorYTMain retube-additionalDiv color"${RTcolors ? '' : ' hidden'} style="margin-bottom: 5px; margin-top: 5px"><span class="retube-label info rt-title">YouTube</span><select id="rt-selectRTColors" class="rt-select"><option value="default">ReTube</option><option value="defaultDark">ReTube Dark</option><option value="custom">Свои цвета</option></select></div>`)
+			document.querySelector('#retube-tab2').insertAdjacentHTML('beforeend', `<div class="rt-colorYTMain retube-additionalDiv color"${RTcolors ? '' : ' hidden'} style="margin-bottom: 5px; margin-top: 5px"><span class="retube-label info rt-title">YouTube</span><select id="rt-selectRTColors" class="rt-select"><option value="default">ReTube</option><option value="defaultDark">ReTube Dark</option><option value="purple">Пурпурный</option><option value="green">Зелёный</option><option value="custom">Свои цвета</option></select></div>`)
 
 			document.querySelector('#retube-tab2').insertAdjacentHTML('beforeend', `<div class="rt-colorYT retube-additionalDiv color"${RTcolors ? '' : ' hidden'}><label class="retube-label retube-label-additional">Основной<input type="color" id="rt-colorYTMain"></input></label><button class="retube-button retube-button-reset" onclick="const colorInput = document.querySelector('#rt-colorYTMain'); colorInput.value = '#1b222a'; colorInput.dispatchEvent(new Event('input', { bubbles: true }))"></button></div>`)
 			document.querySelector('#retube-tab2').insertAdjacentHTML('beforeend', `<div class="rt-colorYT retube-additionalDiv color"${RTcolors ? '' : ' hidden'}><label class="retube-label retube-label-additional">Дополнительный<input type="color" id="rt-colorYTAdditional"></input></label><button class="retube-button retube-button-reset" onclick="const colorInput = document.querySelector('#rt-colorYTAdditional'); colorInput.value = '#222b35'; colorInput.dispatchEvent(new Event('input', { bubbles: true }))"></button></div>`)
@@ -478,6 +478,22 @@
 					colorText.value = '#c9d0d3'
 					colorLink.value = '#a1bad7'
 					colorVideoProgress.value = '#5785ba'
+				}
+				else if (selected == 'purple') {
+					colorMain.value = '#191014'
+					colorAdditional.value = '#2e1f2a'
+					colorPlayer.value = '#0e0c0e'
+					colorText.value = '#c9d0d3'
+					colorLink.value = '#d7a2c4'
+					colorVideoProgress.value = '#954166'
+				}
+				else if (selected == 'green') {
+					colorMain.value = '#101917'
+					colorAdditional.value = '#1a2825'
+					colorPlayer.value = '#0c0d0e'
+					colorText.value = '#c9d0d3'
+					colorLink.value = '#a5e4d9'
+					colorVideoProgress.value = '#409c91'
 				}
 				else if (selected == 'custom') {
 					HideColors(false)
@@ -1005,7 +1021,6 @@
 		}
 	}
 	function VideoQuality() {
-		let mplayer
 		const qualityFormatListWidth = {
 			highres: 4320,
 			hd2880: 2880,
@@ -1020,15 +1035,12 @@
 		}
 		let selectedQuality = RTSelectVideoQuality
 		waitSelector('#movie_player').then(movie_player => {
-			mplayer = document.querySelector('#movie_player')
-			if (currentPage() == 'watch') {
-				movie_player.addEventListener('onPlaybackQualityChange', quality => {
-					if (document.activeElement.getAttribute('role') == 'menuitemradio' && quality !== selectedQuality) {
-						console.info(`Запоминаем качество '${quality}' для текущей сессии`)
-						selectedQuality = quality
-					}
-				})
-			}
+			movie_player.addEventListener('onPlaybackQualityChange', quality => {
+				if (document.activeElement.getAttribute('role') == 'menuitemradio' && quality !== selectedQuality) {
+					console.info(`Запоминаем качество '${quality}' для текущей сессии`)
+					selectedQuality = quality
+				}
+			})
 			setQuality()
 			movie_player.addEventListener('onStateChange', setQuality)
 		})
@@ -1037,7 +1049,7 @@
 			if (['PLAYING', 'BUFFERING'].includes(getPlayerState(state)) && !setQuality.quality_busy) {
 				setQuality.quality_busy = true
 				const waitQuality = setInterval(() => {
-					let availableQualityLevels = mplayer.getAvailableQualityLevels();
+					let availableQualityLevels = movie_player.getAvailableQualityLevels();
 					const maxWidth = currentPage() == 'watch' ? window.screen.width : window.innerWidth;
 					const maxQualityIdx = availableQualityLevels.findIndex(i => qualityFormatListWidth[i] <= (maxWidth * 1.3));
 					availableQualityLevels = availableQualityLevels.slice(maxQualityIdx);
@@ -1045,11 +1057,11 @@
 						clearInterval(waitQuality);
 						const maxAvailableQuality = Math.max(availableQualityLevels.indexOf(selectedQuality), 0);
 						const newQuality = availableQualityLevels[maxAvailableQuality];
-						if (mplayer.hasOwnProperty('setPlaybackQuality')) {
-							mplayer.setPlaybackQuality(newQuality);
+						if (movie_player.hasOwnProperty('setPlaybackQuality')) {
+							movie_player.setPlaybackQuality(newQuality);
 						}
-						if (mplayer.hasOwnProperty('setPlaybackQualityRange')) {
-							mplayer.setPlaybackQualityRange(newQuality, newQuality);
+						if (movie_player.hasOwnProperty('setPlaybackQualityRange')) {
+							movie_player.setPlaybackQualityRange(newQuality, newQuality);
 						}
 					}
 				}, 50);
