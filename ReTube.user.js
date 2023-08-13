@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ReTube
 // @namespace    http://tampermonkey.net/
-// @version      4.0.1
+// @version      4.0.2
 // @description ReTube
 // @author       Eject
 // @match        *://*.youtube.com/*
@@ -68,8 +68,10 @@
 	//#endregion
 
 	if (RTanimateLoad) {
-		pushCSS('body, ytd-app, #background.ytd-masthead, #container.ytd-searchbox, #chips-wrapper.ytd-feed-filter-chip-bar-renderer, yt-chip-cloud-chip-renderer[chip-style=STYLE_HOME_FILTER], yt-chip-cloud-chip-renderer[chip-style=STYLE_REFRESH_TO_NOVEL_CHIP], #guide-content.ytd-app, ytd-mini-guide-renderer, ytd-mini-guide-entry-renderer, #description.ytd-watch-metadata, .yt-spec-button-shape-next--mono.yt-spec-button-shape-next--tonal, yt-chip-cloud-chip-renderer[chip-style=STYLE_DEFAULT], .ytp-swatch-background-color, .header.ytd-playlist-panel-renderer, .badge-style-type-medium-grey.ytd-badge-supported-renderer, .playlist-items.ytd-playlist-panel-renderer, ytd-playlist-panel-video-renderer[selected][use-color-palette], tp-yt-app-toolbar.ytd-c4-tabbed-header-renderer, #channel-container.ytd-c4-tabbed-header-renderer, #background, #primary, #container, #contentContainer' +
-			'{transition: background 1s cubic-bezier(.21,.98,1,1); animation: 1s show cubic-bezier(0, 0, 0.5, 1)} @keyframes show { 0% { opacity: 0; } 50% { opacity: 0; } 95% { opacity: 0.95; } 100% { opacity: 1; } }', 'rtAnim')
+		waitSelector('head').then(() => {
+			pushCSS('body, ytd-app, #background.ytd-masthead, #container.ytd-searchbox, #chips-wrapper.ytd-feed-filter-chip-bar-renderer, yt-chip-cloud-chip-renderer[chip-style=STYLE_HOME_FILTER], yt-chip-cloud-chip-renderer[chip-style=STYLE_REFRESH_TO_NOVEL_CHIP], #guide-content.ytd-app, ytd-mini-guide-renderer, ytd-mini-guide-entry-renderer, #description.ytd-watch-metadata, .yt-spec-button-shape-next--mono.yt-spec-button-shape-next--tonal, yt-chip-cloud-chip-renderer[chip-style=STYLE_DEFAULT], .ytp-swatch-background-color, .header.ytd-playlist-panel-renderer, .badge-style-type-medium-grey.ytd-badge-supported-renderer, .playlist-items.ytd-playlist-panel-renderer, ytd-playlist-panel-video-renderer[selected][use-color-palette], tp-yt-app-toolbar.ytd-c4-tabbed-header-renderer, #channel-container.ytd-c4-tabbed-header-renderer, #background, #primary, #container, #contentContainer' +
+				'{transition: background 1s cubic-bezier(.21,.98,1,1); animation: 1s show cubic-bezier(0, 0, 0.5, 1)} @keyframes show { 0% { opacity: 0; } 50% { opacity: 0; } 95% { opacity: 0.95; } 100% { opacity: 1; } }', 'rtAnim')
+		})
 	}
 	if (RTvideoDateCreated) finishEvent(() => DateTimeCreated(true, RTSettingsDateOnVideoBackgroundChange))
 	if (RTreturnDislikes) ReturnDislikes()
@@ -111,7 +113,7 @@
 		fetch('https://raw.githubusercontent.com/Eject37/ReTube/main/latestVersion').then(response => response.text()).then(text => {
 			if (text.replaceAll(',', '').trim() > GM_info.script.version) {
 				if (confirm(`ReTube.\nДоступно обновление (${GM_info.script.version} > ${text.trim()})\nОбновить сейчас?`)) {
-					window.open('https://github.com/Eject37/ReTube/raw/main/ReTube.user.js')
+					GM_openInTab('https://github.com/Eject37/ReTube/raw/main/ReTube.user.js')
 				}
 			}
 		}).catch()
@@ -634,7 +636,8 @@
 			'tp-yt-paper-dialog {backdrop-filter: blur(17px); background-color: var(--YT-overlayMenu-color)}' + // Окно добавления видео в плейлист
 			'#subscribe-button-shape > button {background-color: var(--YT-additional-color); color: var(--YT-text-color)} #subscribe-button-shape > button:hover {background-color: var(--YT-hoverVideoButton-color)}' + // Кнопка Подписаться
 			'.yt-core-attributed-string--link-inherit-color { color: var(--YT-text-color) !important }' + // Цвет текста описания видео
-			'.ytp-tooltip.ytp-preview .ytp-tooltip-text { border-radius: 12px !important }' // Закругление всплывашки с таймкодом при наведении на прогресс видео
+			'.ytp-tooltip.ytp-preview .ytp-tooltip-text, .ytp-tooltip-text, .tp-yt-paper-tooltip[style-target=tooltip] { border-radius: 12px !important }' + // Закругление всплывающих подсказок
+			'html[dark], [dark] { --yt-spec-static-brand-white: var(--YT-text-color) }' // Цвет текста в чате на стриме
 			, 'rt-paint')
 
 		// --yt-spec-text-secondary: #aaa;
@@ -684,7 +687,7 @@
 			, 'rt-hideTrashStyle')
 
 		waitSelector('ytd-segmented-like-dislike-button-renderer').then(() => {
-			const buttonNames = ['Поделиться', 'Создать клип', 'Спасибо', 'Поділитися', 'Створити кліп', 'Дякую']
+			const buttonNames = ['Поделиться', 'Создать клип', 'Спасибо', 'Показать текст видео', 'Поділитися', 'Створити кліп', 'Дякую', 'Показати текстову версію']
 			document.querySelector('ytd-download-button-renderer')?.setAttribute('hidden', '')
 
 			document.querySelectorAll('ytd-button-renderer').forEach(button => {
@@ -738,7 +741,8 @@
 			'span.style-scope.ytd-compact-radio-renderer {font-family: Ubuntu !important; font-weight: 700 !important; font-style: normal !important;}' +
 
 			'ytd-rich-grid-renderer.style-scope.ytd-two-column-browse-results-renderer, ytd-guide-section-renderer.style-scope.ytd-guide-renderer, .button.ytd-text-inline-expander, ' +
-			'#title.ytd-structured-description-video-lockup-renderer, #subtitle.ytd-structured-description-video-lockup-renderer, h4.ytd-macro-markers-list-item-renderer {font-family: Ubuntu !important;}' +
+			'#title.ytd-structured-description-video-lockup-renderer, #subtitle.ytd-structured-description-video-lockup-renderer, h4.ytd-macro-markers-list-item-renderer, ' +
+			'.metadata.ytd-notification-renderer {font-family: Ubuntu !important;}' +
 
 			'div.style-scope.ytd-rich-grid-row {font-weight: 400 !important;}' +
 
@@ -769,8 +773,13 @@
 			'#simplebox-placeholder.ytd-comment-simplebox-renderer, #label.ytd-playlist-add-to-option-renderer, .ytd-menu-title-renderer, #rt-videoCount ' +
 			'{font-family: "Ubuntu" !important; font-weight: 400 !important;}' +
 
+			'.tp-yt-paper-tooltip[style-target=tooltip] {font-size: 1.35rem !important}' +
+			'.ytp-tooltip {font-size: 125% !important}' +
+
 			'.yt-spec-button-shape-next, yt-formatted-string.ytd-menu-service-item-renderer, ytd-text-inline-expander, ytd-rich-list-header-renderer[is-modern-sd] #title.ytd-rich-list-header-renderer, ' +
-			'#time.ytd-macro-markers-list-item-renderer, #title.ytd-video-description-infocards-section-renderer, #subtitle.ytd-video-description-infocards-section-renderer {font-family: "Ubuntu Light Custom" !important}'
+			'#time.ytd-macro-markers-list-item-renderer, #title.ytd-video-description-infocards-section-renderer, #subtitle.ytd-video-description-infocards-section-renderer, ' +
+			'#guide-section-title.ytd-guide-section-renderer, .title.ytd-mini-guide-entry-renderer, .ytp-tooltip, .tp-yt-paper-tooltip[style-target=tooltip], ' +
+			'#message.yt-live-chat-viewer-engagement-message-renderer, html {font-family: "Ubuntu Light Custom" !important}'
 			, 'rt-betterFontStyle')
 	}
 	function DateTimeCreated(date, style2) {
@@ -1121,6 +1130,7 @@
 		Object.defineProperty(window, "_lact", _lact)
 	}
 	function ShowVideoCountOnChannel() {
+		if (currentPage() != 'watch') return;
 		const CACHE_PREFIX = 'retube-channel-videos-count:', SELECTOR_ID = 'retube-video-count'
 		waitSelector('#upload-info #owner-sub-count, ytm-slim-owner-renderer .subhead', { stop_on_page_change: true }).then(el => setVideoCount(el));
 
