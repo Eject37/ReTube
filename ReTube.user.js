@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ReTube
 // @namespace    http://tampermonkey.net/
-// @version      4.0.2
+// @version      4.0.3
 // @description ReTube
 // @author       Eject
 // @match        *://*.youtube.com/*
@@ -110,6 +110,7 @@
 		document.querySelector('#rtAnim')?.remove()
 
 		await new Promise(resolve => setTimeout(resolve, 5000))
+		if (currentPage() == 'embed') return;
 		fetch('https://raw.githubusercontent.com/Eject37/ReTube/main/latestVersion').then(response => response.text()).then(text => {
 			if (text.replaceAll(',', '').trim() > GM_info.script.version) {
 				if (confirm(`ReTube.\nДоступно обновление (${GM_info.script.version} > ${text.trim()})\nОбновить сейчас?`)) {
@@ -390,7 +391,7 @@
 				document.documentElement.style.setProperty('--YT-link-color', e.target.value)
 				document.documentElement.style.setProperty('--YT-notificationsBadge-color', ModifyColor(e.target.value, -95, -78, -58))
 				document.documentElement.style.setProperty('--YT-panelActiveButton-color', ModifyColor(e.target.value, -56, -46, -20))
-				document.documentElement.style.setProperty('--YT-HD4KBadge-color', ModifyColor(e.target.value, -74, -48, 2) + '87')
+				document.documentElement.style.setProperty('--YT-HD4KBadge-color', ModifyColor(e.target.value, -97, -94, -78))
 			}, 20))
 			colorVideoProgress.addEventListener('input', debounce(e => document.documentElement.style.setProperty('--YT-videoProgress-color', e.target.value), 20))
 
@@ -486,7 +487,7 @@
 					colorAdditional.value = '#2e1f2a'
 					colorPlayer.value = '#0e0c0e'
 					colorText.value = '#c9d0d3'
-					colorLink.value = '#d7a2c4'
+					colorLink.value = '#d1a8b2'
 					colorVideoProgress.value = '#954166'
 				}
 				else if (selected == 'green') {
@@ -582,7 +583,7 @@
 			`--YT-videoProgress-color: ${RTColorYTVideoProgress}; --YT-iconText-color: ${ModifyColor(RTColorYTText, -1, -8, -11)}; --YT-icon-color: ${ModifyColor(RTColorYTAdditional, 26, 22, 17)};` +
 			`--YT-player-color: ${RTColorYTPlayer}; --YT-videoTime-color: ${ModifyColor(RTColorYTAdditional, 11, 13, 15)}ba;` +
 			`--YT-notificationsBadge-color: ${ModifyColor(RTColorYTLink, -95, -78, -58)}; --YT-panelActiveButton-color: ${ModifyColor(RTColorYTLink, -56, -46, -20)};` +
-			`--YT-HD4KBadge-color: ${ModifyColor(RTColorYTLink, -74, -48, 2)}87; }` +
+			`--YT-HD4KBadge-color: ${ModifyColor(RTColorYTLink, -97, -94, -78)}; }` +
 
 			'html[dark], [dark] {--yt-spec-base-background: var(--YT-main-color)}' + // Цвет фона всего ютуба
 			'html[darker-dark-theme][dark], [darker-dark-theme] [dark] {--yt-spec-text-primary: var(--YT-text-color)}' + // Цвет текста всего ютуба
@@ -614,7 +615,10 @@
 			'.yt-spec-icon-badge-shape--type-notification .yt-spec-icon-badge-shape__badge {background-color: var(--YT-notificationsBadge-color)}' + // Цвет бэйджа количества уведомлений
 			'sup.ytp-swatch-color-white {color: var(--YT-link-color)}' + // Цвет надписей HD в выборе качества
 			'.ytp-chrome-controls .ytp-button[aria-pressed]:after {background-color: var(--YT-panelActiveButton-color) !important}' + // Цвет полоски снизу включённых субтитров
-			'.ytp-button.ytp-settings-button.ytp-hd-quality-badge:after, .ytp-button.ytp-settings-button.ytp-4k-quality-badge:after {background-color: var(--YT-HD4KBadge-color)}' + // Цвет надписи HD и 4К
+
+			'.ytp-button.ytp-settings-button.ytp-hd-quality-badge:after, .ytp-button.ytp-settings-button.ytp-4k-quality-badge:after, .ytp-button.ytp-settings-button.ytp-8k-quality-badge:after {background-color: var(--YT-HD4KBadge-color); border-radius: 3px}' + // Надписи HD, 4K, 8K
+			'.ytp-big-mode .ytp-settings-button.ytp-hd-quality-badge:after, .ytp-big-mode .ytp-settings-button.ytp-4k-quality-badge:after, .ytp-big-mode .ytp-settings-button.ytp-8k-quality-badge:after {border-radius: 6px !important}' + // Надписи HD, 4K, 8K в полном экране
+
 			'.ytp-menuitem[aria-checked=true] .ytp-menuitem-toggle-checkbox {background: var(--YT-notificationsBadge-color) !important}' + // Задний цвет тугл кнопок в настройках видео
 			'.ytp-popup.ytp-contextmenu {background: var(--YT-overlayMenu-color); border-radius: 10px; backdrop-filter: blur(10px)}' + // Задний цвет и закругление панели ПКМ по видео
 			'html[dark], [dark] {--yt-spec-additive-background: var(--YT-searchBorderHover-color)}' + // Цвет наведения на элементы в поиске
@@ -742,7 +746,7 @@
 
 			'ytd-rich-grid-renderer.style-scope.ytd-two-column-browse-results-renderer, ytd-guide-section-renderer.style-scope.ytd-guide-renderer, .button.ytd-text-inline-expander, ' +
 			'#title.ytd-structured-description-video-lockup-renderer, #subtitle.ytd-structured-description-video-lockup-renderer, h4.ytd-macro-markers-list-item-renderer, ' +
-			'.metadata.ytd-notification-renderer {font-family: Ubuntu !important;}' +
+			'.metadata.ytd-notification-renderer, .metadata-stats.ytd-playlist-byline-renderer {font-family: Ubuntu !important;}' +
 
 			'div.style-scope.ytd-rich-grid-row {font-weight: 400 !important;}' +
 
@@ -1059,8 +1063,7 @@
 				setQuality.quality_busy = true
 				const waitQuality = setInterval(() => {
 					let availableQualityLevels = movie_player.getAvailableQualityLevels();
-					const maxWidth = currentPage() == 'watch' ? window.screen.width : window.innerWidth;
-					const maxQualityIdx = availableQualityLevels.findIndex(i => qualityFormatListWidth[i] <= (maxWidth * 1.3));
+					const maxQualityIdx = availableQualityLevels.findIndex(i => qualityFormatListWidth[i]);
 					availableQualityLevels = availableQualityLevels.slice(maxQualityIdx);
 					if (availableQualityLevels?.length) {
 						clearInterval(waitQuality);
