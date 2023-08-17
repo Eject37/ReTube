@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ReTube
 // @namespace    http://tampermonkey.net/
-// @version      4.0.3
+// @version      4.0.4
 // @description ReTube
 // @author       Eject
 // @match        *://*.youtube.com/*
@@ -43,6 +43,8 @@
 	var RTscrollVolume = await GM_getValue('rt-scrollVolume') == 'true'
 	var RTmiddleClickSearch = await GM_getValue('rt-middleClickSearch') == 'true'
 	var RTtranslateCommentButton = await GM_getValue('rt-translateCommentButton') == 'true'
+	var RTscrollSpeed = await GM_getValue('rt-scrollSpeed') == 'true'
+
 	var RTSettingsDateOnVideoBackgroundChange = await GM_getValue('rt-settings-dateOnVideoBackgroundChange') == 'true'
 	var RTColorWatchedLabelBackground = await GM_getValue('rt-color-watchedLabelBackground') ?? '#343a41'
 	var RTColorWatchedBackground = await GM_getValue('rt-color-watchedBackground') ?? '#ffffff'
@@ -100,6 +102,7 @@
 		if (RTscrollVolume) ScrollVolume()
 		if (RTmiddleClickSearch) MiddleClickSearch()
 		if (RTtranslateCommentButton) TranslateCommentButton()
+		if (RTscrollSpeed) ScrollSpeed()
 
 		if (RTcolors) PaintYouTube(true)
 		if (RThideAllTrash) HideTrash(true)
@@ -186,6 +189,7 @@
 			document.querySelector('#retube-tab1').insertAdjacentHTML('beforeend', '<div><label class="retube-label" retube-tooltip="https://i.imgur.com/SRYep7k.png"><input type="checkbox" id="rt-checkbox18"></input>Изменение громкости видео на 1% (Shift + колесо)</label></div>')
 			document.querySelector('#retube-tab1').insertAdjacentHTML('beforeend', '<div><label class="retube-label" retube-tooltip="https://i.imgur.com/YNFVrke.png"><input type="checkbox" id="rt-checkbox19"></input>Открывать результаты поиска в новой вкладке (СКМ)</label></div>')
 			document.querySelector('#retube-tab1').insertAdjacentHTML('beforeend', '<div><label class="retube-label" retube-tooltip="https://i.imgur.com/PyJ1GvF.png"><input type="checkbox" id="rt-checkbox20"></input>Добавить кнопку перевода комментариев</label></div>')
+			document.querySelector('#retube-tab1').insertAdjacentHTML('beforeend', '<div><label class="retube-label" retube-tooltip="Правый клик: стандартная скорость||Колесо: регулировка скорости на 0.1x"><input type="checkbox" id="rt-checkbox21"></input>Изменение скорости видео на кнопке \'Настройки\'</label></div>')
 
 			document.querySelector('#retube-tab1').insertAdjacentHTML('beforeend', '<br/><button class="retube-button retube-button-save">Сохранить</button>')
 			//#endregion
@@ -258,6 +262,7 @@
 			const checkbox18 = document.querySelector('#rt-checkbox18')
 			const checkbox19 = document.querySelector('#rt-checkbox19')
 			const checkbox20 = document.querySelector('#rt-checkbox20')
+			const checkbox21 = document.querySelector('#rt-checkbox21')
 			const checkboxSettings1 = document.querySelector('#rt-checkboxSettingsDateOnVideoBackground')
 			const color1 = document.querySelector('#rt-color1')
 			const color2 = document.querySelector('#rt-color2')
@@ -295,6 +300,7 @@
 			checkbox18.checked = RTscrollVolume
 			checkbox19.checked = RTmiddleClickSearch
 			checkbox20.checked = RTtranslateCommentButton
+			checkbox21.checked = RTscrollSpeed
 			checkboxSettings1.checked = RTSettingsDateOnVideoBackgroundChange
 			color1.value = RTColorWatchedLabelBackground
 			color2.value = RTColorWatchedBackground
@@ -333,6 +339,7 @@
 				GM_setValue('rt-scrollVolume', checkbox18.checked ? 'true' : 'false')
 				GM_setValue('rt-middleClickSearch', checkbox19.checked ? 'true' : 'false')
 				GM_setValue('rt-translateCommentButton', checkbox20.checked ? 'true' : 'false')
+				GM_setValue('rt-scrollSpeed', checkbox21.checked ? 'true' : 'false')
 
 				GM_setValue('rt-settings-dateOnVideoBackgroundChange', checkboxSettings1.checked ? 'true' : 'false')
 				GM_setValue('rt-color-watchedLabelBackground', color1.value)
@@ -421,6 +428,7 @@
 			checkbox16.addEventListener('change', e => { if (e.target.checked) runOnPageInitOrTransition(() => ShowVideoCountOnChannel()) })
 			checkbox17.addEventListener('change', e => { if (e.target.checked) HotkeysAlwaysActive() })
 			checkbox18.addEventListener('change', e => { if (e.target.checked) ScrollVolume() })
+			checkbox21.addEventListener('change', e => { if (e.target.checked) ScrollSpeed() })
 			checkbox1.addEventListener('change', e => document.querySelectorAll(".rt-colorWatched").forEach(x => x.toggleAttribute('hidden', !e.target.checked)))
 			checkbox3.addEventListener('change', e => document.querySelector(".rt-settingsDateOnVideoBackgroundDiv").toggleAttribute('hidden', !e.target.checked))
 
@@ -677,19 +685,23 @@
 			'.sbfl_a {display: none}' + // Надпись пожаловаться на поисковые подсказки
 			'[role="button"][aria-label="Добавить в очередь"], [role="button"][aria-label="Додати в чергу"] {display: none}' + // Кнопка на видео добавить в очередь
 			'.gsst_a {display: none !important}' + // Кнопка клавиатуры при поиске видео
-			'button[title*="Авто"] {display: none !important}' + // Кнопка автовоспроизвидения в плеере
+			'button[title="Автовоспроизведение выключено"], button[title="Автоматичне відтворення вимкнено"] {display: none !important}' + // Кнопка выключенного автовоспроизвидения в плеере
+			'button[title="Субтитры недоступны"], button[title="Субтитри недоступні"] {display: none !important}' + // Кнопка субтитров если они не доступны в плеере
 			'.ytp-button.ytp-remote-button {display: none !important}' + // Кнопка трансляции на телевизор в плеере
+			'.ytp-button.ytp-miniplayer-button {display: none !important}' + // Кнопка мини-плеера в плеере
 			'.ytp-button.ytp-miniplayer-button {display: none !important}' + // Кнопка мини-плеера в плеере
 			'#premium-upsell-link, .ytd-guide-renderer.style-scope:nth-of-type(4) {display: none}' + // Кнопка оформить youtube premium + секция другие возможности в левой панели
 			'yt-multi-page-menu-section-renderer:nth-child(5) {display: none}' + // Кнопки справка и отправить отзыв в меню аккаунта
 			'.ytp-fullerscreen-edu-button-subtle {display: none !important}' + // Кнопка под прогрессбаром в полном экране (прокрутите для доп. информации)
+			'button[id="infoButton"] {display: none !important}' + // Кнопка информационной панели от SponsorBlock (в плеере)
 
 			'.ytp-paid-content-overlay, .iv-branding, #movie_player > [class^="ytp-ce-"], .ytp-cards-teaser-text, ytm-paid-content-overlay-renderer, ' +
 			'ytd-search-pyv-renderer, [class^="ytd-promoted-"], ytd-video-renderer + ytd-shelf-renderer, ytd-video-renderer + ytd-reel-shelf-renderer, ' +
 			'#clarify-box, .ytd-watch-flexy.attached-message, ytd-popup-container tp-yt-paper-dialog ytd-single-option-survey-renderer, #donation-shelf ytd-donation-unavailable-renderer, ' +
-			'.sparkles-light-cta, ytd-feed-nudge-renderer {display: none !important}'
+			'.sparkles-light-cta, ytd-feed-nudge-renderer, .ytp-pause-overlay-container {display: none !important}'
 			, 'rt-hideTrashStyle')
 
+		// Скрываем кнопки под видео
 		waitSelector('ytd-segmented-like-dislike-button-renderer').then(() => {
 			const buttonNames = ['Поделиться', 'Создать клип', 'Спасибо', 'Показать текст видео', 'Поділитися', 'Створити кліп', 'Дякую', 'Показати текстову версію']
 			document.querySelector('ytd-download-button-renderer')?.setAttribute('hidden', '')
@@ -699,6 +711,14 @@
 					button.setAttribute('hidden', '')
 				}
 			})
+		})
+
+		// Скрываем кнопку аннотации в настройках видео
+		waitSelector('.ytp-menuitem').then(() => {
+			Array.from(document.querySelector('.ytp-popup.ytp-settings-menu .ytp-panel-menu').children).forEach(x => (x.innerHTML.includes('Аннотации') || x.innerHTML.includes('Анотації')) && (x.remove()))
+			const settings = document.querySelector('.ytp-settings-button')
+			settings.click()
+			settings.click()
 		})
 	}
 	function MarkWatchedVideos(mark) {
@@ -1388,6 +1408,114 @@
 				document.head && (observer.disconnect(), document.head.append(script));
 			}).observe(document, { subtree: true, childList: true });
 		}
+	}
+	function ScrollSpeed() {
+		if (!document.querySelector('#rt-scrollSpeedStyle'))
+			pushCSS('.YSS_hud {display: flex; flex-direction: column; justify-content: flex-end; align-items: center; position: absolute; top: 0; bottom: 0; left: 0; right: 0; opacity: 0; transition: opacity 500ms ease 0s; z-index: 999; pointer-events: none}' +
+				'.YSS_text {position: absolute; text-align: center; width: 65px; height: 50px; color: white; margin-bottom: 250px; background-color: rgba(0 0 0 / 30%); border-radius: 20px; font-weight: bold; backdrop-filter: blur(4px); font-size: 175%}', 'rt-scrollSpeedStyle')
+
+		const createHud = () => {
+			const hud = document.createElement('div')
+			hud.classList.add('YSS_hud')
+			hud.innerHTML = '<div class="YSS_text"></div>'
+			return hud
+		}
+
+		waitSelector('.ytp-settings-button').then(container => {
+			let id
+			const hud = createHud()
+			document.querySelector('.ytp-left-controls').appendChild(hud)
+
+			const showHud = speed => {
+				clearTimeout(id)
+				document.querySelector('.YSS_text').innerHTML = `${speed}x`
+				hud.style.opacity = 1
+				id = setTimeout(() => (hud.style.opacity = 0), 800)
+			}
+
+			container.addEventListener('wheel', e => {
+				try {
+					e.preventDefault()
+					const player = document.querySelector('.video-stream.html5-main-video')
+					const currentSpeed = player.playbackRate
+					const newSpeed = e.deltaY < 0 ? currentSpeed + 0.1 : currentSpeed - 0.1
+					player.playbackRate = parseFloat(newSpeed.toFixed(2))
+					showHud(document.querySelector('.video-stream.html5-main-video').playbackRate)
+				} catch { }
+			})
+			container.addEventListener('contextmenu', e => {
+				try {
+					e.preventDefault()
+					e.stopPropagation()
+					e.stopImmediatePropagation()
+					document.querySelector('.video-stream.html5-main-video').playbackRate = 1
+					showHud(document.querySelector('.video-stream.html5-main-video').playbackRate)
+				} catch { }
+			})
+		})
+
+
+
+
+
+
+		// if (!enable) {
+		// 	document.querySelector('.YSS_hud')?.remove()
+		// 	document.querySelector('#rt-speed')?.remove()
+		// 	return
+		// }
+
+		// if (!document.querySelector('#rt-scrollSpeedStyle'))
+		// 	pushCSS('.YSS_hud {display: flex; flex-direction: column; justify-content: flex-end; align-items: center; position: absolute; top: 0; bottom: 0; left: 0; right: 0; opacity: 0; transition: opacity 500ms ease 0s; z-index: 999; pointer-events: none}' +
+		// 		'.YSS_text {position: absolute; text-align: center; width: 65px; height: 50px; color: white; margin-bottom: 250px; background-color: rgba(0 0 0 / 30%); border-radius: 20px; font-weight: bold; backdrop-filter: blur(4px); font-size: 175%}', 'rt-scrollSpeedStyle')
+
+		// const createHud = () => {
+		// 	const hud = document.createElement('div')
+		// 	hud.classList.add('YSS_hud')
+		// 	hud.innerHTML = '<div class="YSS_text"></div>'
+		// 	return hud
+		// }
+
+		// waitSelector('.ytp-subtitles-button').then(container => {
+		// 	let id
+		// 	const hud = createHud()
+		// 	document.querySelector('.ytp-left-controls').appendChild(hud)
+
+		// 	const showHud = speed => {
+		// 		clearTimeout(id)
+		// 		document.querySelector('.YSS_text').innerHTML = `${speed}x`
+		// 		hud.style.opacity = 1
+		// 		id = setTimeout(() => (hud.style.opacity = 0), 800)
+		// 	}
+
+		// 	container.insertAdjacentHTML('beforebegin', `
+		// 		<button class="ytp-button rt-player-button" id="rt-speed" data-message="speed" tabindex="-1" data-tooltip="Скорость">
+		// 			<svg version="1.1" viewBox="0 0 36 36" height="100%" width="100%">
+		// 				<use class="ytp-svg-shadow" xlink:href="#rt-speed"></use>
+		// 				<path id="rt-speed" d="m 27.526463,13.161756 -1.400912,2.107062 a 9.1116182,9.1116182 0 0 1 -0.250569,8.633258 H 10.089103 A 9.1116182,9.1116182 0 0 1 22.059491,11.202758 L 24.166553,9.8018471 A 11.389523,11.389523 0 0 0 8.1301049,25.041029 2.2779046,2.2779046 0 0 0 10.089103,26.179981 H 25.863592 A 2.2779046,2.2779046 0 0 0 27.845369,25.041029 11.389523,11.389523 0 0 0 27.537852,13.150367 Z M 16.376119,20.95219 a 2.2779046,2.2779046 0 0 0 3.223235,0 l 6.446471,-9.669705 -9.669706,6.44647 a 2.2779046,2.2779046 0 0 0 0,3.223235 z" fill="#fff"></path>
+		// 			</svg>
+		// 			<span id="retube-speed-label"><span>
+		// 		</button>
+		// 	`)
+
+		// 	const rtSpeedControl = document.querySelector('#rt-speed')
+		// 	rtSpeedControl.addEventListener('wheel', e => {
+		// 		try {
+		// 			e.preventDefault()
+		// 			const player = document.querySelector('.video-stream.html5-main-video')
+		// 			const currentSpeed = player.playbackRate
+		// 			const newSpeed = e.deltaY < 0 ? currentSpeed + 0.1 : currentSpeed - 0.1
+		// 			player.playbackRate = parseFloat(newSpeed.toFixed(2))
+		// 			showHud(document.querySelector('.video-stream.html5-main-video').playbackRate)
+		// 		} catch { }
+		// 	})
+		// 	rtSpeedControl.addEventListener('click', () => {
+		// 		try {
+		// 			document.querySelector('.video-stream.html5-main-video').playbackRate = 1
+		// 			showHud(document.querySelector('.video-stream.html5-main-video').playbackRate)
+		// 		} catch { }
+		// 	})
+		// })
 	}
 	//#endregion
 	//#region Доп функции
