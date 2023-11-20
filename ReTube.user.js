@@ -1,10 +1,11 @@
 // ==UserScript==
 // @name         ReTube
 // @namespace    http://tampermonkey.net/
-// @version      4.1.0
+// @version      4.1.1
 // @description ReTube
 // @author       Eject
 // @match        *://www.youtube.com/*
+// @match        *://music.youtube.com/*
 // @icon          https://github.com/Eject37/ReTube/raw/main/yt-favicon2.ico
 // @updateURL  https://github.com/Eject37/ReTube/raw/main/ReTube.user.js
 // @downloadURL  https://github.com/Eject37/ReTube/raw/main/ReTube.user.js
@@ -61,6 +62,8 @@
 
 	var RTHeadTop = await GM_getValue('rt-head-top') ?? '100px'
 	var RTHeadLeft = await GM_getValue('rt-head-left') ?? '100px'
+
+	var RTUpdateCheck = await GM_getValue('rt-updateCheck') == 'true' ? true : await GM_getValue('rt-updateCheck') === undefined
 	//#endregion
 	//#region Переменные
 	const api = 'AIzaSyDlRKyiwxqBIU8Yt2k6x7WlKQQJiz9YsnE'
@@ -115,15 +118,18 @@
 		await new Promise(resolve => setTimeout(resolve, 3000))
 		document.querySelector('#rtAnim')?.remove()
 
-		await new Promise(resolve => setTimeout(resolve, 5000))
-		if (currentPage() == 'embed') return;
-		fetch('https://raw.githubusercontent.com/Eject37/ReTube/main/latestVersion').then(response => response.text()).then(text => {
-			if (text.replaceAll(',', '').trim() > GM_info.script.version) {
-				if (confirm(`ReTube.\nДоступно обновление (${GM_info.script.version} > ${text.trim()})\nОбновить сейчас?`)) {
-					GM_openInTab('https://github.com/Eject37/ReTube/raw/main/ReTube.user.js')
+		if (RTUpdateCheck) {
+			await new Promise(resolve => setTimeout(resolve, 5000))
+
+			if (currentPage() == 'embed') return;
+			fetch('https://raw.githubusercontent.com/Eject37/ReTube/main/latestVersion').then(response => response.text()).then(text => {
+				if (text.replaceAll(',', '').trim() > GM_info.script.version) {
+					if (confirm(`ReTube.\nДоступно обновление (${GM_info.script.version} > ${text.trim()})\nОбновить сейчас?`)) {
+						GM_openInTab('https://github.com/Eject37/ReTube/raw/main/ReTube.user.js')
+					}
 				}
-			}
-		}).catch()
+			}).catch()
+		}
 	}
 	document.addEventListener('keyup', function (e) {
 		if (e.key == 'F2') {
@@ -199,6 +205,7 @@
 			document.querySelector('#retube-settings-tab2').insertAdjacentHTML('beforeend', '<div><label class="retube-label" retube-tooltip="https://i.imgur.com/YNFVrke.png"><input type="checkbox" id="rt-checkbox19"></input>Открывать результаты поиска в новой вкладке (СКМ)</label></div>')
 			document.querySelector('#retube-settings-tab2').insertAdjacentHTML('beforeend', '<div><label class="retube-label" retube-tooltip="https://i.imgur.com/PyJ1GvF.png"><input type="checkbox" id="rt-checkbox20"></input>Добавить кнопку перевода комментариев</label></div>')
 			document.querySelector('#retube-settings-tab2').insertAdjacentHTML('beforeend', '<div><label class="retube-label" retube-tooltip="Правый клик: стандартная скорость||Колесо: регулировка скорости на 0.1x"><input type="checkbox" id="rt-checkbox21"></input>Изменение скорости видео на кнопке \'Настройки\'</label></div>')
+			document.querySelector('#retube-settings-tab2').insertAdjacentHTML('beforeend', '<br/><div><label class="retube-label"><input type="checkbox" id="rt-checkbox22"></input>Автоматическая проверка обновлений скрипта</label></div>')
 
 			document.querySelector('#retube-tab1').insertAdjacentHTML('beforeend', '<br/><button class="retube-button retube-button-save">Сохранить</button>')
 			//#endregion
@@ -288,6 +295,7 @@
 			const checkbox19 = document.querySelector('#rt-checkbox19')
 			const checkbox20 = document.querySelector('#rt-checkbox20')
 			const checkbox21 = document.querySelector('#rt-checkbox21')
+			const checkbox22 = document.querySelector('#rt-checkbox22')
 			const checkboxSettings1 = document.querySelector('#rt-checkboxSettingsDateOnVideoBackground')
 			const color1 = document.querySelector('#rt-color1')
 			const color2 = document.querySelector('#rt-color2')
@@ -326,6 +334,7 @@
 			checkbox19.checked = RTmiddleClickSearch
 			checkbox20.checked = RTtranslateCommentButton
 			checkbox21.checked = RTscrollSpeed
+			checkbox22.checked = RTUpdateCheck
 			checkboxSettings1.checked = RTSettingsDateOnVideoBackgroundChange
 			color1.value = RTColorWatchedLabelBackground
 			color2.value = RTColorWatchedBackground
@@ -365,6 +374,7 @@
 				GM_setValue('rt-middleClickSearch', checkbox19.checked ? 'true' : 'false')
 				GM_setValue('rt-translateCommentButton', checkbox20.checked ? 'true' : 'false')
 				GM_setValue('rt-scrollSpeed', checkbox21.checked ? 'true' : 'false')
+				GM_setValue('rt-updateCheck', checkbox22.checked ? 'true' : 'false')
 
 				GM_setValue('rt-settings-dateOnVideoBackgroundChange', checkboxSettings1.checked ? 'true' : 'false')
 				GM_setValue('rt-color-watchedLabelBackground', color1.value)
@@ -417,7 +427,7 @@
 				document.documentElement.style.setProperty('--YT-text-color', e.target.value)
 				document.documentElement.style.setProperty('--YT-icon-inactive', ModifyColor(e.target.value, -25, -23, -15))
 				document.documentElement.style.setProperty('--YT-iconText-color', ModifyColor(e.target.value, -1, -8, -11))
-				try { const box = document.querySelector('.searchbox'); box.textContent = box.textContent.replace(/webkit-input-placeholder{color:.*?}/, `webkit-input-placeholder{color:${ModifyColor(e.target.value, -50, -50, -50)}}`) } catch { }
+				document.documentElement.style.setProperty('--YT-searchBoxPlaceholder-color', ModifyColor(e.target.value, -50, -50, -50))
 			}, 20))
 			colorLink.addEventListener('input', debounce(e => {
 				document.documentElement.style.setProperty('--YT-link-color', e.target.value)
@@ -605,7 +615,6 @@
 	function PaintYouTube(paint) {
 		if (!paint) {
 			document.querySelector('#rt-paint')?.remove()
-			try { const box = document.querySelector('.searchbox'); box.textContent = box.textContent.replace(/webkit-input-placeholder{color:.*?}/, `webkit-input-placeholder{color:#888}`) } catch { }
 			return
 		}
 
@@ -616,7 +625,7 @@
 			`--YT-videoProgress-color: ${RTColorYTVideoProgress}; --YT-iconText-color: ${ModifyColor(RTColorYTText, -1, -8, -11)}; --YT-icon-color: ${ModifyColor(RTColorYTAdditional, 26, 22, 17)};` +
 			`--YT-player-color: ${RTColorYTPlayer}; --YT-videoTime-color: ${ModifyColor(RTColorYTAdditional, 11, 13, 15)}ba;` +
 			`--YT-notificationsBadge-color: ${ModifyColor(RTColorYTLink, -95, -78, -58)}; --YT-panelActiveButton-color: ${ModifyColor(RTColorYTLink, -56, -46, -20)};` +
-			`--YT-HD4KBadge-color: ${ModifyColor(RTColorYTLink, -97, -94, -78)}; }` +
+			`--YT-HD4KBadge-color: ${ModifyColor(RTColorYTLink, -97, -94, -78)}; --YT-searchBoxPlaceholder-color: ${ModifyColor(RTColorYTText, -50, -50, -50)} }` +
 
 			'html[dark], [dark] {--yt-spec-base-background: var(--YT-main-color)}' + // Цвет фона всего ютуба
 			'html[darker-dark-theme][dark], [darker-dark-theme] [dark] {--yt-spec-text-primary: var(--YT-text-color)}' + // Цвет текста всего ютуба
@@ -639,7 +648,7 @@
 			'html[dark], [dark] {--yt-spec-static-brand-red: var(--YT-videoProgress-color)}' + // Цвет прогресса просмотренных видео
 			'.ytp-swatch-background-color {background: var(--YT-videoProgress-color) !important} .ytp-load-progress {transition: transform 1.5s ease-in-out}' + // Полоска прогресса видео + плавная прогрузка
 			'.ytp-live-badge[disabled]:before {background: var(--YT-videoProgress-color) !important}' + // Круглый значок 'В эфире'
-			'#ytp-id-17, #ytp-id-18, #ytp-id-19 {background: var(--YT-overlayMenu-color); backdrop-filter: blur(15px)}' + // Цвет фона настроек видео
+			'#ytp-id-17, #ytp-id-18, #ytp-id-19, .ytp-popup {background: var(--YT-overlayMenu-color) !important; backdrop-filter: blur(15px)}' + // Цвет фона настроек видео
 			'html[dark], [dark] {--yt-spec-wordmark-text: var(--YT-iconText-color)}' + // Надпись возле иконки ютуба
 			'svg.external-icon > svg > g > path:nth-child(1), #card svg g g path:nth-child(1) {fill: var(--YT-icon-color)}' + // Иконка ютуба
 			'#logo-icon > svg > g > g:nth-child(1) > path:nth-child(1) {fill: var(--YT-icon-color)}' + // Иконка ютуба (старый дизайн)
@@ -665,7 +674,7 @@
 			'.html5-video-player[aria-label*="в "] {background: rgb(0, 0, 0)}' + // Цвет фона плеера в полном экране
 			'html[dark], [dark] {--yt-spec-outline: var(--YT-hoverAndPanels2-color)}' + // Панель упорядочить в комментариях + разные разделители
 			'.ytp-bezel-text {border-radius: 20px !important; font-weight: bold; backdrop-filter: blur(4px);}' + // Параметры всплывашки регулировки звука
-			'html[dark], [dark] {--ytd-searchbox-text-color: var(--YT-text-color)}' + // Цвет текста в поисковой строке
+			'html[dark], [dark] {--ytd-searchbox-text-color: var(--YT-text-color)} #container.ytd-searchbox input.ytd-searchbox::placeholder, #container.ytd-searchbox>[slot=search-input] input::placeholder {color: var(--YT-searchBoxPlaceholder-color) !important}' + // Цвет текста в поисковой строке
 			'html[dark] .sbsb_a {backdrop-filter: blur(15px)}' + // Размытие элементов при поиске видео
 			'.ytp-doubletap-static-circle {background-color: rgba(0 0 0 / 50%) !important; backdrop-filter: blur(4px);} .ytp-doubletap-tooltip-label { font-size: 15px !important; font-weight: bold !important; margin-left: 8px;}' + // Параметры всплывашки перемотки видео
 			'ytd-searchbox[has-focus] #container.ytd-searchbox {border: 1px solid var(--ytd-searchbox-legacy-border-color)}' + // Обводка активной панели поиска
@@ -676,15 +685,12 @@
 			'.ytp-tooltip.ytp-preview .ytp-tooltip-text, .ytp-tooltip-text, .tp-yt-paper-tooltip[style-target=tooltip] { border-radius: 12px !important }' + // Закругление всплывающих подсказок
 			'html[dark], [dark] { --yt-spec-static-brand-white: var(--YT-text-color) }' +  // Цвет текста в чате на стриме
 			'.yt-spec-button-shape-next--mono.yt-spec-button-shape-next--tonal { background-color: var(--YT-additional-color) }' + // Цвет фона лайков и прочих кнопок
-			'html[dark] ::selection { background: var(--YT-hoverAndPanels2-color) !important; }' // Цвет выделения текста
+			'html[dark] ::selection { background: var(--YT-hoverAndPanels2-color) !important; }' + // Цвет выделения текста
+			'::-webkit-scrollbar {width: 9px; height: 9px; background-color: var(--YT-main-color);}' + // Скроллбар
+			'.yt-spec-button-shape-next--mono.yt-spec-button-shape-next--tonal {color: var(--YT-text-color)}' // Цвет текста кнопок (лайк, дизлайк, сохранить)
 			, 'rt-paint')
 
 		// --yt-spec-text-secondary: #aaa;
-
-		// Красим цвет текста окна поиска
-		waitSelector('#search').then(() => {
-			try { const box = document.querySelector('.searchbox'); box.textContent = box.textContent.replace('webkit-input-placeholder{color:#888}', `webkit-input-placeholder{color:${ModifyColor(RTColorYTText, -50, -50, -50)}}`) } catch { }
-		})
 	}
 	function HideTrash(hide) {
 		if (!hide) {
@@ -757,7 +763,7 @@
 		pushCSS(`#progress.ytd-thumbnail-overlay-resume-playback-renderer {--background-color: ${RTColorWatchedBackground + '80'}}` +
 			'#progress.ytd-thumbnail-overlay-resume-playback-renderer:after {content: " " !important;top: -114px !important;position: absolute !important;background-color: var(--background-color) !important;padding: 7px !important; width: 196px;height: 100px; animation: 0.5s show ease;}' +
 			`#progress.ytd-thumbnail-overlay-resume-playback-renderer {--label-color: ${RTColorWatchedLabelBackground + '80'}}` +
-			'#progress.ytd-thumbnail-overlay-resume-playback-renderer:before {content: "ПРОСМОТРЕНО"; background-color: var(--label-color); top: -112px;font-size: 12px;color: white;position: absolute;z-index: 1;left: 0; margin: 8px;opacity: 1;padding: 4px 5px; border-radius: 9px;letter-spacing: .5px;font-weight: 500;line-height: 1.2rem; backdrop-filter: blur(4px); animation: 0.5s show ease;}' +
+			'#progress.ytd-thumbnail-overlay-resume-playback-renderer:before {content: "ПРОСМОТРЕНО"; background-color: var(--label-color); top: -112px;font-size: 12px;color: white;position: absolute;z-index: 1;left: 0; margin: 8px;opacity: 1;padding: 4px 5px; border-radius: 9px;font-weight: 500;line-height: 1.2rem; backdrop-filter: blur(4px); animation: 0.5s show ease;}' +
 			'ytd-thumbnail-overlay-time-status-renderer {z-index: 1}' +
 			'#overlays > ytd-thumbnail-overlay-playback-status-renderer {display: none !important;}' +
 			'ytd-expanded-shelf-contents-renderer #progress.ytd-thumbnail-overlay-resume-playback-renderer:after, ytd-video-renderer  #progress.ytd-thumbnail-overlay-resume-playback-renderer:after {top: -134px !important;width: 232px;height: 120px;}' +
@@ -774,7 +780,7 @@
 			'.ytd-playlist-panel-video-renderer:hover .ytd-playlist-panel-video-renderer #progress.ytd-thumbnail-overlay-resume-playback-renderer::before, .ytd-playlist-panel-video-renderer:hover .ytd-playlist-panel-video-renderer #progress.ytd-thumbnail-overlay-resume-playback-renderer::after {display: none;}' +
 			'.ytd-playlist-video-renderer:hover .ytd-playlist-video-renderer #progress.ytd-thumbnail-overlay-resume-playback-renderer::before, .ytd-playlist-video-renderer:hover .ytd-playlist-video-renderer #progress.ytd-thumbnail-overlay-resume-playback-renderer::after {display: none;}' +
 			`.ytd-rich-grid-media #progress.ytd-thumbnail-overlay-resume-playback-renderer, .ytd-search ytd-video-renderer #progress.ytd-thumbnail-overlay-resume-playback-renderer {--label-color: ${RTColorWatchedLabelBackground + '80'}}` +
-			`.ytd-rich-grid-media #progress.ytd-thumbnail-overlay-resume-playback-renderer::before, .ytd-search ytd-video-renderer #progress.ytd-thumbnail-overlay-resume-playback-renderer::before {content: "ПРОСМОТРЕНО"; top: -123px; background-color: var(--label-color); font-size: 14px; color: white; position: absolute; z-index: 1;left: 2px; opacity: 1; letter-spacing: 0.5px;font-weight: 500; line-height: 1.5rem; margin: -65px 10px; padding: 4px 5px; border-radius: 9px; backdrop-filter: blur(4px); animation: 0.5s show ease;}` +
+			`.ytd-rich-grid-media #progress.ytd-thumbnail-overlay-resume-playback-renderer::before, .ytd-search ytd-video-renderer #progress.ytd-thumbnail-overlay-resume-playback-renderer::before {content: "ПРОСМОТРЕНО"; top: -123px; background-color: var(--label-color); font-size: 14px; color: white; position: absolute; z-index: 1;left: 2px; opacity: 1; font-weight: 500; line-height: 1.5rem; margin: -65px 10px; padding: 4px 5px; border-radius: 9px; backdrop-filter: blur(4px); animation: 0.5s show ease;}` +
 			`.ytd-rich-grid-media #progress.ytd-thumbnail-overlay-resume-playback-renderer, .ytd-search #progress.ytd-thumbnail-overlay-resume-playback-renderer {--background-color: ${RTColorWatchedBackground + '80'}}` +
 			'.ytd-rich-grid-media #progress.ytd-thumbnail-overlay-resume-playback-renderer::after, .ytd-search #progress.ytd-thumbnail-overlay-resume-playback-renderer::after {width: 100%;height: 30vh; content: " " !important;top: -30vh !important;position: absolute !important;background-color: var(--background-color) !important;padding: 7px !important; animation: 0.5s show ease;}' +
 			'.ytd-rich-grid-media:hover #progress.ytd-thumbnail-overlay-resume-playback-renderer::before, .ytd-rich-grid-media:hover #progress.ytd-thumbnail-overlay-resume-playback-renderer::after {display: none;}' +
@@ -831,7 +837,7 @@
 			'.yt-spec-button-shape-next, yt-formatted-string.ytd-menu-service-item-renderer, ytd-text-inline-expander, ytd-rich-list-header-renderer[is-modern-sd] #title.ytd-rich-list-header-renderer, ' +
 			'#time.ytd-macro-markers-list-item-renderer, #title.ytd-video-description-infocards-section-renderer, #subtitle.ytd-video-description-infocards-section-renderer, ' +
 			'#guide-section-title.ytd-guide-section-renderer, .title.ytd-mini-guide-entry-renderer, .ytp-tooltip, .tp-yt-paper-tooltip[style-target=tooltip], ' +
-			'#message.yt-live-chat-viewer-engagement-message-renderer, html, .animated-rolling-number-wiz {font-family: "Ubuntu Light Custom" !important}'
+			'#message.yt-live-chat-viewer-engagement-message-renderer, html, .animated-rolling-number-wiz, #video-title.ytd-reel-item-renderer {font-family: "Ubuntu Light Custom" !important}'
 			, 'rt-betterFontStyle')
 	}
 	function DateTimeCreated(date, style2) {
