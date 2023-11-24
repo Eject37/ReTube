@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ReTube
 // @namespace    http://tampermonkey.net/
-// @version      4.1.1
+// @version      4.1.2
 // @description ReTube
 // @author       Eject
 // @match        *://www.youtube.com/*
@@ -687,10 +687,11 @@
 			'.yt-spec-button-shape-next--mono.yt-spec-button-shape-next--tonal { background-color: var(--YT-additional-color) }' + // Цвет фона лайков и прочих кнопок
 			'html[dark] ::selection { background: var(--YT-hoverAndPanels2-color) !important; }' + // Цвет выделения текста
 			'::-webkit-scrollbar {width: 9px; height: 9px; background-color: var(--YT-main-color);}' + // Скроллбар
-			'.yt-spec-button-shape-next--mono.yt-spec-button-shape-next--tonal {color: var(--YT-text-color)}' // Цвет текста кнопок (лайк, дизлайк, сохранить)
+			'.yt-spec-button-shape-next--mono.yt-spec-button-shape-next--tonal {color: var(--YT-text-color)}' + // Цвет текста кнопок (лайк, дизлайк, сохранить)
+			'#cinematics-container {display: none}' // Отключаем профессиональное освещение
 			, 'rt-paint')
 
-		// --yt-spec-text-secondary: #aaa;
+		// --yt-spec-text-secondary: #aaa
 	}
 	function HideTrash(hide) {
 		if (!hide) {
@@ -735,20 +736,25 @@
 			, 'rt-hideTrashStyle')
 
 		// Скрываем кнопки под видео
-		waitSelector('ytd-segmented-like-dislike-button-renderer').then(() => {
+		waitSelector('.YtSegmentedLikeDislikeButtonViewModelSegmentedButtonsWrapper').then(() => {
 			const buttonNames = ['Поделиться', 'Создать клип', 'Спасибо', 'Показать текст видео', 'Поділитися', 'Створити кліп', 'Дякую', 'Показати текстову версію']
 			document.querySelector('ytd-download-button-renderer')?.setAttribute('hidden', '')
 
-			document.querySelectorAll('ytd-button-renderer').forEach(button => {
+			document.querySelectorAll('ytd-button-renderer, yt-button-view-model').forEach(button => {
 				if (!button.id.includes('submit-button') && buttonNames.some(name => button.innerHTML.includes(name))) {
 					button.setAttribute('hidden', '')
 				}
 			})
 		})
 
-		// Скрываем кнопку аннотации в настройках видео
+		// Скрываем кнопку аннотации + выключаем и скрываем Профессиональное освещение (если включена покраска ютуба) в настройках видео
 		waitSelector('.ytp-menuitem').then(() => {
-			Array.from(document.querySelector('.ytp-popup.ytp-settings-menu .ytp-panel-menu').children).forEach(x => (x.innerHTML.includes('Аннотации') || x.innerHTML.includes('Анотації')) && (x.remove()))
+			Array.from(document.querySelector('.ytp-popup.ytp-settings-menu .ytp-panel-menu').children).forEach(x => (x.innerHTML.includes('Аннотации') || x.innerHTML.includes('Анотації')) && x.remove())
+			if (RTcolors) {
+				Array.from(document.querySelector('.ytp-popup.ytp-settings-menu .ytp-panel-menu').children).forEach(x => (x.innerHTML.includes('Профессиональное освещение') || x.innerHTML.includes('Кінематографічне освітлення')) && x.getAttribute('aria-checked') == "true" && x.click())
+				Array.from(document.querySelector('.ytp-popup.ytp-settings-menu .ytp-panel-menu').children).forEach(x => (x.innerHTML.includes('Профессиональное освещение') || x.innerHTML.includes('Кінематографічне освітлення')) && x.remove())
+			}
+
 			const settings = document.querySelector('.ytp-settings-button')
 			settings.click()
 			settings.click()
@@ -761,7 +767,7 @@
 		}
 
 		pushCSS(`#progress.ytd-thumbnail-overlay-resume-playback-renderer {--background-color: ${RTColorWatchedBackground + '80'}}` +
-			'#progress.ytd-thumbnail-overlay-resume-playback-renderer:after {content: " " !important;top: -114px !important;position: absolute !important;background-color: var(--background-color) !important;padding: 7px !important; width: 196px;height: 100px; animation: 0.5s show ease;}' +
+			'#progress.ytd-thumbnail-overlay-resume-playback-renderer:after {content: " " !important;top: -280px !important;position: absolute !important;background-color: var(--background-color) !important;padding: 7px !important; width: 100%;height: 10000%; animation: 0.5s show ease;}' +
 			`#progress.ytd-thumbnail-overlay-resume-playback-renderer {--label-color: ${RTColorWatchedLabelBackground + '80'}}` +
 			'#progress.ytd-thumbnail-overlay-resume-playback-renderer:before {content: "ПРОСМОТРЕНО"; background-color: var(--label-color); top: -112px;font-size: 12px;color: white;position: absolute;z-index: 1;left: 0; margin: 8px;opacity: 1;padding: 4px 5px; border-radius: 9px;font-weight: 500;line-height: 1.2rem; backdrop-filter: blur(4px); animation: 0.5s show ease;}' +
 			'ytd-thumbnail-overlay-time-status-renderer {z-index: 1}' +
@@ -780,7 +786,7 @@
 			'.ytd-playlist-panel-video-renderer:hover .ytd-playlist-panel-video-renderer #progress.ytd-thumbnail-overlay-resume-playback-renderer::before, .ytd-playlist-panel-video-renderer:hover .ytd-playlist-panel-video-renderer #progress.ytd-thumbnail-overlay-resume-playback-renderer::after {display: none;}' +
 			'.ytd-playlist-video-renderer:hover .ytd-playlist-video-renderer #progress.ytd-thumbnail-overlay-resume-playback-renderer::before, .ytd-playlist-video-renderer:hover .ytd-playlist-video-renderer #progress.ytd-thumbnail-overlay-resume-playback-renderer::after {display: none;}' +
 			`.ytd-rich-grid-media #progress.ytd-thumbnail-overlay-resume-playback-renderer, .ytd-search ytd-video-renderer #progress.ytd-thumbnail-overlay-resume-playback-renderer {--label-color: ${RTColorWatchedLabelBackground + '80'}}` +
-			`.ytd-rich-grid-media #progress.ytd-thumbnail-overlay-resume-playback-renderer::before, .ytd-search ytd-video-renderer #progress.ytd-thumbnail-overlay-resume-playback-renderer::before {content: "ПРОСМОТРЕНО"; top: -123px; background-color: var(--label-color); font-size: 14px; color: white; position: absolute; z-index: 1;left: 2px; opacity: 1; font-weight: 500; line-height: 1.5rem; margin: -65px 10px; padding: 4px 5px; border-radius: 9px; backdrop-filter: blur(4px); animation: 0.5s show ease;}` +
+			`.ytd-rich-grid-media #progress.ytd-thumbnail-overlay-resume-playback-renderer::before, .ytd-search ytd-video-renderer #progress.ytd-thumbnail-overlay-resume-playback-renderer::before {content: "ПРОСМОТРЕНО"; top: -95px; background-color: var(--label-color); font-size: 14px; color: white; position: absolute; z-index: 1;left: 2px; opacity: 1; font-weight: 500; line-height: 1.5rem; margin: -65px 10px; padding: 4px 5px; border-radius: 9px; backdrop-filter: blur(4px); animation: 0.5s show ease;}` +
 			`.ytd-rich-grid-media #progress.ytd-thumbnail-overlay-resume-playback-renderer, .ytd-search #progress.ytd-thumbnail-overlay-resume-playback-renderer {--background-color: ${RTColorWatchedBackground + '80'}}` +
 			'.ytd-rich-grid-media #progress.ytd-thumbnail-overlay-resume-playback-renderer::after, .ytd-search #progress.ytd-thumbnail-overlay-resume-playback-renderer::after {width: 100%;height: 30vh; content: " " !important;top: -30vh !important;position: absolute !important;background-color: var(--background-color) !important;padding: 7px !important; animation: 0.5s show ease;}' +
 			'.ytd-rich-grid-media:hover #progress.ytd-thumbnail-overlay-resume-playback-renderer::before, .ytd-rich-grid-media:hover #progress.ytd-thumbnail-overlay-resume-playback-renderer::after {display: none;}' +
@@ -837,7 +843,7 @@
 			'.yt-spec-button-shape-next, yt-formatted-string.ytd-menu-service-item-renderer, ytd-text-inline-expander, ytd-rich-list-header-renderer[is-modern-sd] #title.ytd-rich-list-header-renderer, ' +
 			'#time.ytd-macro-markers-list-item-renderer, #title.ytd-video-description-infocards-section-renderer, #subtitle.ytd-video-description-infocards-section-renderer, ' +
 			'#guide-section-title.ytd-guide-section-renderer, .title.ytd-mini-guide-entry-renderer, .ytp-tooltip, .tp-yt-paper-tooltip[style-target=tooltip], ' +
-			'#message.yt-live-chat-viewer-engagement-message-renderer, html, .animated-rolling-number-wiz, #video-title.ytd-reel-item-renderer {font-family: "Ubuntu Light Custom" !important}'
+			'#message.yt-live-chat-viewer-engagement-message-renderer, html, .animated-rolling-number-wiz, #video-title.ytd-reel-item-renderer, .html5-video-player {font-family: "Ubuntu Light Custom" !important}'
 			, 'rt-betterFontStyle')
 	}
 	function DateTimeCreated(date, style2) {
@@ -1487,69 +1493,6 @@
 				} catch { }
 			})
 		})
-
-
-
-
-
-
-		// if (!enable) {
-		// 	document.querySelector('.YSS_hud')?.remove()
-		// 	document.querySelector('#rt-speed')?.remove()
-		// 	return
-		// }
-
-		// if (!document.querySelector('#rt-scrollSpeedStyle'))
-		// 	pushCSS('.YSS_hud {display: flex; flex-direction: column; justify-content: flex-end; align-items: center; position: absolute; top: 0; bottom: 0; left: 0; right: 0; opacity: 0; transition: opacity 500ms ease 0s; z-index: 999; pointer-events: none}' +
-		// 		'.YSS_text {position: absolute; text-align: center; width: 65px; height: 50px; color: white; margin-bottom: 250px; background-color: rgba(0 0 0 / 30%); border-radius: 20px; font-weight: bold; backdrop-filter: blur(4px); font-size: 175%}', 'rt-scrollSpeedStyle')
-
-		// const createHud = () => {
-		// 	const hud = document.createElement('div')
-		// 	hud.classList.add('YSS_hud')
-		// 	hud.innerHTML = '<div class="YSS_text"></div>'
-		// 	return hud
-		// }
-
-		// waitSelector('.ytp-subtitles-button').then(container => {
-		// 	let id
-		// 	const hud = createHud()
-		// 	document.querySelector('.ytp-left-controls').appendChild(hud)
-
-		// 	const showHud = speed => {
-		// 		clearTimeout(id)
-		// 		document.querySelector('.YSS_text').innerHTML = `${speed}x`
-		// 		hud.style.opacity = 1
-		// 		id = setTimeout(() => (hud.style.opacity = 0), 800)
-		// 	}
-
-		// 	container.insertAdjacentHTML('beforebegin', `
-		// 		<button class="ytp-button rt-player-button" id="rt-speed" data-message="speed" tabindex="-1" data-tooltip="Скорость">
-		// 			<svg version="1.1" viewBox="0 0 36 36" height="100%" width="100%">
-		// 				<use class="ytp-svg-shadow" xlink:href="#rt-speed"></use>
-		// 				<path id="rt-speed" d="m 27.526463,13.161756 -1.400912,2.107062 a 9.1116182,9.1116182 0 0 1 -0.250569,8.633258 H 10.089103 A 9.1116182,9.1116182 0 0 1 22.059491,11.202758 L 24.166553,9.8018471 A 11.389523,11.389523 0 0 0 8.1301049,25.041029 2.2779046,2.2779046 0 0 0 10.089103,26.179981 H 25.863592 A 2.2779046,2.2779046 0 0 0 27.845369,25.041029 11.389523,11.389523 0 0 0 27.537852,13.150367 Z M 16.376119,20.95219 a 2.2779046,2.2779046 0 0 0 3.223235,0 l 6.446471,-9.669705 -9.669706,6.44647 a 2.2779046,2.2779046 0 0 0 0,3.223235 z" fill="#fff"></path>
-		// 			</svg>
-		// 			<span id="retube-speed-label"><span>
-		// 		</button>
-		// 	`)
-
-		// 	const rtSpeedControl = document.querySelector('#rt-speed')
-		// 	rtSpeedControl.addEventListener('wheel', e => {
-		// 		try {
-		// 			e.preventDefault()
-		// 			const player = document.querySelector('.video-stream.html5-main-video')
-		// 			const currentSpeed = player.playbackRate
-		// 			const newSpeed = e.deltaY < 0 ? currentSpeed + 0.1 : currentSpeed - 0.1
-		// 			player.playbackRate = parseFloat(newSpeed.toFixed(2))
-		// 			showHud(document.querySelector('.video-stream.html5-main-video').playbackRate)
-		// 		} catch { }
-		// 	})
-		// 	rtSpeedControl.addEventListener('click', () => {
-		// 		try {
-		// 			document.querySelector('.video-stream.html5-main-video').playbackRate = 1
-		// 			showHud(document.querySelector('.video-stream.html5-main-video').playbackRate)
-		// 		} catch { }
-		// 	})
-		// })
 	}
 	//#endregion
 	//#region Доп функции
