@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ReTube
 // @namespace    http://tampermonkey.net/
-// @version      4.1.2
+// @version      4.1.3
 // @description ReTube
 // @author       Eject
 // @match        *://www.youtube.com/*
@@ -736,7 +736,7 @@
 			, 'rt-hideTrashStyle')
 
 		// Скрываем кнопки под видео
-		waitSelector('.YtSegmentedLikeDislikeButtonViewModelSegmentedButtonsWrapper').then(() => {
+		waitSelector('ytd-segmented-like-dislike-button-renderer, .YtSegmentedLikeDislikeButtonViewModelSegmentedButtonsWrapper').then(() => {
 			const buttonNames = ['Поделиться', 'Создать клип', 'Спасибо', 'Показать текст видео', 'Поділитися', 'Створити кліп', 'Дякую', 'Показати текстову версію']
 			document.querySelector('ytd-download-button-renderer')?.setAttribute('hidden', '')
 
