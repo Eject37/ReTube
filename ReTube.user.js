@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ReTube
 // @namespace    http://tampermonkey.net/
-// @version      4.1.4
+// @version      4.1.5
 // @description ReTube
 // @author       Eject
 // @match        *://www.youtube.com/*
@@ -82,7 +82,6 @@
 		})
 	}
 	if (RTvideoDateCreated) finishEvent(() => DateTimeCreated(true, RTSettingsDateOnVideoBackgroundChange))
-	if (RTreturnDislikes) ReturnDislikes()
 	if (RTstopChannelTrailer) StopChannelTrailer()
 	if (RTvideoQuality) VideoQuality()
 	if (RTshowVideoCountOnChannel) runOnPageInitOrTransition(() => ShowVideoCountOnChannel())
@@ -114,6 +113,7 @@
 		if (RThideAllTrash) HideTrash(true)
 		if (RTbetterFont) ImproveFont(true)
 		if (RTwatchedVideo && !window.location.href.includes('feed/history')) MarkWatchedVideos(true)
+		if (RTreturnDislikes) ReturnDislikes()
 
 		await new Promise(resolve => setTimeout(resolve, 3000))
 		document.querySelector('#rtAnim')?.remove()
@@ -693,6 +693,7 @@
 
 		// --yt-spec-text-secondary: #aaa
 	}
+
 	function HideTrash(hide) {
 		if (!hide) {
 			document.querySelector('#rt-hideTrashStyle')?.remove()
@@ -732,7 +733,7 @@
 			'.ytp-paid-content-overlay, .iv-branding, #movie_player > [class^="ytp-ce-"], .ytp-cards-teaser-text, ytm-paid-content-overlay-renderer, ' +
 			'ytd-search-pyv-renderer, [class^="ytd-promoted-"], ytd-video-renderer + ytd-shelf-renderer, ytd-video-renderer + ytd-reel-shelf-renderer, ' +
 			'#clarify-box, .ytd-watch-flexy.attached-message, ytd-popup-container tp-yt-paper-dialog ytd-single-option-survey-renderer, #donation-shelf ytd-donation-unavailable-renderer, ' +
-			'.sparkles-light-cta, ytd-feed-nudge-renderer, .ytp-pause-overlay-container {display: none !important}'
+			'.sparkles-light-cta, ytd-feed-nudge-renderer, .ytp-pause-overlay-container, .ytp-panel-menu > .ytp-menuitem[role="menuitemcheckbox"] {display: none !important}'
 			, 'rt-hideTrashStyle')
 
 		// Скрываем кнопки под видео
@@ -747,19 +748,21 @@
 			})
 		})
 
-		// Скрываем кнопку аннотации + выключаем и скрываем Профессиональное освещение (если включена покраска ютуба) в настройках видео
+		// Выключаем и скрываем Профессиональное освещение (если включена покраска ютуба) в настройках видео
+		// Аннотации скрываем выше в css чтобы не было бага с остановкой видео
 		waitSelector('.ytp-menuitem').then(() => {
-			Array.from(document.querySelector('.ytp-popup.ytp-settings-menu .ytp-panel-menu').children).forEach(x => (x.innerHTML.includes('Аннотации') || x.innerHTML.includes('Анотації')) && x.remove())
 			if (RTcolors) {
 				Array.from(document.querySelector('.ytp-popup.ytp-settings-menu .ytp-panel-menu').children).forEach(x => (x.innerHTML.includes('Профессиональное освещение') || x.innerHTML.includes('Кінематографічне освітлення')) && x.getAttribute('aria-checked') == "true" && x.click())
 				Array.from(document.querySelector('.ytp-popup.ytp-settings-menu .ytp-panel-menu').children).forEach(x => (x.innerHTML.includes('Профессиональное освещение') || x.innerHTML.includes('Кінематографічне освітлення')) && x.remove())
 			}
 
+			// Быстро открываем и закрываем настройки видео (чтобы обновился размер элементов)
 			const settings = document.querySelector('.ytp-settings-button')
 			settings.click()
 			settings.click()
 		})
 	}
+
 	function MarkWatchedVideos(mark) {
 		if (!mark) {
 			document.querySelector('#rt-watchedVideoStyle')?.remove()
@@ -793,6 +796,7 @@
 			'@keyframes show { from { opacity: 0; } to { opacity: 1; } }'
 			, 'rt-watchedVideoStyle')
 	}
+
 	function ImproveFont(improve) {
 		if (!improve) {
 			document.querySelector('#rt-betterFontStyle')?.remove()
@@ -805,7 +809,7 @@
 
 			'ytd-rich-grid-renderer.style-scope.ytd-two-column-browse-results-renderer, ytd-guide-section-renderer.style-scope.ytd-guide-renderer, .button.ytd-text-inline-expander, ' +
 			'#title.ytd-structured-description-video-lockup-renderer, #subtitle.ytd-structured-description-video-lockup-renderer, h4.ytd-macro-markers-list-item-renderer, ' +
-			'.metadata.ytd-notification-renderer, .metadata-stats.ytd-playlist-byline-renderer {font-family: Ubuntu !important;}' +
+			'.metadata.ytd-notification-renderer, .metadata-stats.ytd-playlist-byline-renderer, .badge.ytd-badge-supported-renderer {font-family: Ubuntu !important;}' +
 
 			'div.style-scope.ytd-rich-grid-row {font-weight: 400 !important;}' +
 
@@ -848,6 +852,7 @@
 			'ytd-watch-metadata[title-headline-xs] h1.ytd-watch-metadata {font-family: "YouTube Sans"; font-weight: 600}'
 			, 'rt-betterFontStyle')
 	}
+
 	function DateTimeCreated(date, style2) {
 		if (currentPage() != 'watch') return
 
@@ -889,6 +894,7 @@
 			})
 		}).catch()
 	}
+
 	function FocusAndScrollFix(fix) {
 		const playerSelector = 'video.video-stream.html5-main-video'
 		if (!fix) {
@@ -936,6 +942,7 @@
 			document.removeEventListener('wheel', WheelFix)
 		}
 	}
+
 	function RemoveNotificationNumber() {
 		try {
 			new MutationObserver((e) => {
@@ -945,6 +952,7 @@
 			}).observe(document.querySelector("title"), { childList: true, characterDataOldValue: true });
 		} catch { }
 	}
+
 	function CustomIcon(custom) {
 		document.querySelector('#rt-titleIcon')?.remove()
 		const link = document.createElement('link')
@@ -953,34 +961,47 @@
 		if (custom) link.id = 'rt-titleIcon'
 		document.querySelector('head').appendChild(link)
 	}
+
 	function ReturnDislikes() {
 		const CACHE_PREFIX = 'retube-dislikes-count:', SELECTOR_ID = 'retube-dislikes-count'
-		finishEvent(() => {
-			if (currentPage() == 'watch') {
-				waitSelector('ytd-watch-metadata #menu #segmented-dislike-button button', { stop_on_page_change: true }).then(el => setDislikeCount(el))
-			}
-		})
 
-		async function setDislikeCount(container) {
-			const videoId = getVideoId()
+		runOnPageLoad(async () => {
+			if (currentPage() != 'watch') return;
+			document.addEventListener('yt-action', dislikeIsUpdated);
+		});
+
+		function dislikeIsUpdated(evt) {
+			if (currentPage() != 'watch') return;
+
+			switch (evt.detail?.actionName) {
+				case 'yt-reload-continuation-items-command':
+					document.removeEventListener('yt-action', dislikeIsUpdated); // stop listener
+					waitSelector('#actions dislike-button-view-model button', { stop_on_page_change: true }).then(el => setDislikeCount(el));
+					break;
+			}
+		}
+
+		async function setDislikeCount(container = required()) {
+			const videoId = getVideoId();
 			if (!videoId) return console.error('return-dislike videoId: empty', videoId);
-			container.style.width = 'auto';
 
-			if (storage = sessionStorage.getItem(CACHE_PREFIX + videoId)) {
-				insertToHTML({ 'text': storage, 'container': container });
+			container.style.width = 'auto'; // fix width
+
+			if (storage = sessionStorage.getItem(CACHE_PREFIX + videoId)) { // has in cache
+				insertToHTML({ 'data': JSON.parse(storage), 'container': container });
 			}
-			else if (dislikeCount = await getDislikeCount()) {
-				insertToHTML({ 'text': dislikeCount, 'container': container });
+			else if (data = await getDislikeCount()) {
+				insertToHTML({ 'data': data, 'container': container });
 			}
 
 			async function getDislikeCount() {
-				const videoId = getVideoId()
+				const videoId = getVideoId();
 				const fetchAPI = () => fetch(`https://returnyoutubedislikeapi.com/votes?videoId=${videoId}`,
 					{
 						method: 'GET',
-						headers: { 'Content-Type': 'application/json' }
+						headers: { 'Content-Type': 'application/json' },
 					}
-				).then(response => response.json()).then(json => json.dislikes).catch()
+				).then(response => response.json()).then(json => json.dislikes && ({ 'likes': json.likes, 'dislikes': json.dislikes })).catch();
 
 				if (result = await fetchAPI()) {
 					sessionStorage.setItem(CACHE_PREFIX + videoId, JSON.stringify(result));
@@ -988,9 +1009,11 @@
 				}
 			}
 
-			function insertToHTML({ text = '', container }) {
+			function insertToHTML({ data = required(), container = required() }) {
 				if (!(container instanceof HTMLElement)) return console.error('container not HTMLElement:', container);
-				setTimeout(() => {
+				const text = data.dislikes;
+
+				try {
 					(document.getElementById(SELECTOR_ID) || (function () {
 						container.insertAdjacentHTML('beforeend',
 							`<span id="${SELECTOR_ID}" style="text-overflow:ellipsis; overflow:visible; white-space:nowrap; padding-left:3px;">${text}</span>`);
@@ -998,10 +1021,12 @@
 					})())
 						.textContent = text;
 					container.title = text;
-				}, 500)
+				}
+				catch { }
 			}
 		}
 	}
+
 	function FullVideoNames(enable) {
 		if (!enable) {
 			document.querySelector('#rt-fullVideoNamesStyle')?.remove()
@@ -1024,11 +1049,13 @@
 			'h4.ytd-macro-markers-list-item-renderer {max-height: unset !important; -webkit-line-clamp: unset !important}' // Отображение заголовка целиком в списке участков видео
 			, 'rt-fullVideoNamesStyle')
 	}
+
 	function StopChannelTrailer() {
 		runOnPageInitOrTransition(() => {
 			waitSelector('#c4-player.playing-mode', { stop_on_page_change: true }).then(player => player.stopVideo())
 		})
 	}
+
 	function RemainingTime() {
 		const SELECTOR_ID = 'retube-player-time-remaining'
 		waitSelector('.ytp-time-duration, ytm-time-display .time-display-content').then(container => {
@@ -1068,6 +1095,7 @@
 			}
 		})
 	}
+
 	function RememberTime() {
 		if (!navigator.cookieEnabled && currentPage() == 'embed')
 			return
@@ -1095,7 +1123,10 @@
 			}
 		}
 	}
+
 	function VideoQuality() {
+		let selectedQuality = RTSelectVideoQuality
+
 		const qualityFormatListWidth = {
 			highres: 4320,
 			hd2880: 2880,
@@ -1108,53 +1139,62 @@
 			small: 240,
 			tiny: 144,
 		}
-		let selectedQuality = RTSelectVideoQuality
+
 		waitSelector('#movie_player').then(movie_player => {
-			movie_player.addEventListener('onPlaybackQualityChange', quality => {
-				if (document.activeElement.getAttribute('role') == 'menuitemradio' && quality !== selectedQuality) {
-					console.info(`Запоминаем качество '${quality}' для текущей сессии`)
-					selectedQuality = quality
-				}
-			})
+			// keep save manual quality in the session
+			if (currentPage() == 'watch') {
+				movie_player.addEventListener('onPlaybackQualityChange', quality => {
+					if (document.activeElement.getAttribute('role') == 'menuitemradio' && quality !== selectedQuality) {
+						console.info(`Запоминаем качество "${quality}" для текущей сессии`)
+						selectedQuality = quality
+					}
+				})
+			}
 			setQuality()
 			movie_player.addEventListener('onStateChange', setQuality)
 		})
 
-		function setQuality(state) {
-			if (['PLAYING', 'BUFFERING'].includes(getPlayerState(state)) && !setQuality.quality_busy) {
-				setQuality.quality_busy = true
-				const waitQuality = setInterval(() => {
-					let availableQualityLevels = movie_player.getAvailableQualityLevels();
-					const maxQualityIdx = availableQualityLevels.findIndex(i => qualityFormatListWidth[i]);
-					availableQualityLevels = availableQualityLevels.slice(maxQualityIdx);
-					if (availableQualityLevels?.length) {
-						clearInterval(waitQuality);
-						const maxAvailableQuality = Math.max(availableQualityLevels.indexOf(selectedQuality), 0);
-						const newQuality = availableQualityLevels[maxAvailableQuality];
-						if (movie_player.hasOwnProperty('setPlaybackQuality')) {
-							movie_player.setPlaybackQuality(newQuality);
-						}
-						if (movie_player.hasOwnProperty('setPlaybackQualityRange')) {
-							movie_player.setPlaybackQualityRange(newQuality, newQuality);
-						}
+		async function setQuality(state) {
+			if (!selectedQuality) return console.error('selectedQuality unavailable', selectedQuality);
+			if ((1 == state || 3 == state) && !setQuality.quality_lock) {
+				setQuality.quality_lock = true;
+				let availableQualityLevels;
+
+				await waitUntil(() => (availableQualityLevels = movie_player.getAvailableQualityLevels()) && availableQualityLevels.length, 50); // 50ms
+
+				const maxQualityIdx = availableQualityLevels.findIndex(i => qualityFormatListWidth[i]);
+				availableQualityLevels = availableQualityLevels.slice(maxQualityIdx);
+
+				const availableQualityIdx = function () {
+					let i = availableQualityLevels.indexOf(selectedQuality);
+					if (i === -1) {
+						const availableQuality = Object.keys(qualityFormatListWidth).filter(v => availableQualityLevels.includes(v) || (v == selectedQuality)),
+							nearestQualityIdx = availableQuality.findIndex(q => q === selectedQuality) - 1
+						i = availableQualityLevels[nearestQualityIdx] ? nearestQualityIdx : 0
 					}
-				}, 50);
+					return i
+				}();
+
+				const newQuality = availableQualityLevels[availableQualityIdx]
+
+				if (typeof movie_player.setPlaybackQuality === 'function') {
+					movie_player.setPlaybackQuality(newQuality)
+				}
+				if (typeof movie_player.setPlaybackQualityRange === 'function') {
+					movie_player.setPlaybackQualityRange(newQuality, newQuality)
+				}
 			}
 			else if (state <= 0) {
-				setQuality.quality_busy = false;
+				setQuality.quality_lock = false
 			}
 		}
-		waitSelector('.ytp-error [class*="reason"]', { stop_on_page_change: true }).then(error_reason_el => {
-			if (alertText = error_reason_el.textContent) {
-				throw alertText
-			}
-		})
 	}
+
 	function FixChannelLinks() {
 		document.addEventListener('mouseover', ({ target }) => {
 			if (!target.matches('.ytd-channel-name')) return;
 			if ((link = target.closest('a'))
-				&& target.__data?.text?.runs.length
+				&& target.__data?.text?.runs?.length
 				&& target.__data?.text?.runs[0].navigationEndpoint?.commandMetadata?.webCommandMetadata?.webPageType == 'WEB_PAGE_TYPE_CHANNEL'
 			) {
 				const urlOrig = link.href
@@ -1172,6 +1212,7 @@
 			}
 		})
 	}
+
 	function ShowTranslationTime() {
 		waitSelector('#movie_player video').then(video => {
 			video.addEventListener('canplay', function () {
@@ -1187,6 +1228,7 @@
 
 		})
 	}
+
 	function DisableSleep() {
 		const _lact = {
 			set: () => 0,
@@ -1194,6 +1236,7 @@
 		}
 		Object.defineProperty(window, "_lact", _lact)
 	}
+
 	function ShowVideoCountOnChannel() {
 		if (currentPage() != 'watch') return;
 		const CACHE_PREFIX = 'retube-channel-videos-count:', SELECTOR_ID = 'retube-video-count'
@@ -1228,6 +1271,7 @@
 			}
 		}
 	}
+
 	function HotkeysAlwaysActive() {
 		document.addEventListener('keydown', e => currentPage() == 'watch' && setFocus(e.target))
 		document.addEventListener('click', e => currentPage() == 'watch' && e.isTrusted && setFocus(e.target))
@@ -1236,6 +1280,7 @@
 			document.querySelector('#movie_player')?.focus({ preventScroll: true })
 		}
 	}
+
 	function ScrollVolume() {
 		pushCSS('.YSV_hud {display: flex; flex-direction: column; justify-content: flex-end; align-items: center; position: absolute; top: 0; bottom: 0; left: 0; right: 0; opacity: 0; transition: opacity 500ms ease 0s; z-index: 999; pointer-events: none}' +
 			'.YSV_text {position: absolute; text-align: center; width: 65px; height: 50px; color: white; margin-bottom: 250px; background-color: rgba(0 0 0 / 30%); border-radius: 20px; font-weight: bold; backdrop-filter: blur(4px); font-size: 175%}', 'rt-scrollVolumeStyle')
@@ -1267,12 +1312,23 @@
 				const vol = Math.max(Math.min(player.getVolume() + 1 * dir, 100), 0)
 				if (vol > 0 && player.isMuted()) player.unMute()
 				player.setVolume(vol)
+
+				let obj = {
+					"data": JSON.stringify({ "volume": vol, "muted": false }),
+					"expiration": 17125032379999,
+					"creation": Date.now()
+				};
+
+				localStorage.setItem("yt-player-volume", JSON.stringify(obj));
+				sessionStorage.setItem("yt-player-volume", JSON.stringify(obj));
+
 				showHud(vol)
 				e.preventDefault()
 				e.stopImmediatePropagation()
 			}
 		})
 	}
+
 	function MiddleClickSearch() {
 		const Util = {
 			q(query, context = document) {
@@ -1329,6 +1385,7 @@
 			})
 		})
 	}
+
 	function TranslateCommentButton() {
 		function ReplaceNode(a, b) {
 			a.parentNode.appendChild(b)
@@ -1412,6 +1469,7 @@
 			commentObserver.observe(document, observerConfig)
 		}
 	}
+
 	function AutoTranslateSubtitles() {
 		const inline_script = () => {
 			const tlang = navigator.language || 'ru-RU';
@@ -1451,6 +1509,7 @@
 			}).observe(document, { subtree: true, childList: true });
 		}
 	}
+
 	function ScrollSpeed() {
 		if (!document.querySelector('#rt-scrollSpeedStyle'))
 			pushCSS('.YSS_hud {display: flex; flex-direction: column; justify-content: flex-end; align-items: center; position: absolute; top: 0; bottom: 0; left: 0; right: 0; opacity: 0; transition: opacity 500ms ease 0s; z-index: 999; pointer-events: none}' +
@@ -1497,6 +1556,7 @@
 		})
 	}
 	//#endregion
+
 	//#region Доп функции
 	function hexToRgb(hex) {
 		const bigint = parseInt(hex.slice(1), 16)
@@ -1590,6 +1650,23 @@
 			}
 		});
 	}
+	function waitUntil(condition = required(), timeout = required()) {
+		if (typeof condition !== 'function') return console.error('waitUntil > condition is not fn:', typeof condition);
+
+		return new Promise((resolve) => {
+			if (result = condition()) {
+				resolve(result);
+			}
+			else {
+				const waitCondition = setInterval(() => {
+					if (result = condition()) {
+						clearInterval(waitCondition);
+						resolve(result);
+					}
+				}, ~~timeout || 500);
+			}
+		});
+	}
 	function runOnPageInitOrTransition(callback, onlyEvent) {
 		if (!callback || typeof callback !== 'function') {
 			return console.error('runOnPageInitOrTransition > callback not function:', ...arguments);
@@ -1651,6 +1728,18 @@
 	}
 	function finishEvent(callback) {
 		document.addEventListener('yt-navigate-finish', () => callback())
+	}
+	function runOnPageLoad(callback) {
+		if (!callback || typeof callback !== 'function') {
+			return console.error('runOnPageLoad > callback not function:', ...arguments);
+		}
+		let prevURL = document.URL;
+		const isURLChange = () => (prevURL === document.URL) ? false : prevURL = document.URL;
+		// init
+		isURLChange() || callback();
+		// update
+		// window.addEventListener('transitionend', () => isURLChange() && callback());
+		document.addEventListener('yt-navigate-finish', () => isURLChange() && callback());
 	}
 	//#endregion
 })()
