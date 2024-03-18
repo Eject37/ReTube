@@ -616,7 +616,6 @@
 	function PaintYouTube(paint) {
 		if (!paint) {
 			document.querySelector('#rt-paint')?.remove()
-			console.log(document.querySelector('#rt-paint'))
 			return
 		}
 
