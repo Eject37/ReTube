@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ReTube
 // @namespace    http://tampermonkey.net/
-// @version      4.1.5
+// @version      4.1.6
 // @description ReTube
 // @author       Eject
 // @match        *://www.youtube.com/*
@@ -229,7 +229,8 @@
 			//#region Таб Инфо
 			document.querySelector('#retube-tab3').insertAdjacentHTML('beforeend', `<br/><div class="retube-label info" style="text-align: center; font-size: 24px; font-weight: bold">ReTube v${GM_info.script.version}</div>`)
 			document.querySelector('#retube-tab3').insertAdjacentHTML('beforeend', '<div class="retube-label info" style="text-align: center;">Разработчик скрипта: Сергей (Eject)</div>')
-			document.querySelector('#retube-tab3').insertAdjacentHTML('beforeend', '<div><br/><button class="retube-button retube-button-discord" onclick="window.open(`https://discord.gg/NG6ZxXCXeU`)">Мой Discord сервер</button></div>')
+			document.querySelector('#retube-tab3').insertAdjacentHTML('beforeend', '<div><br/><button class="retube-button retube-button-discord" onclick="window.open(`https://github.com/Eject37`)">Мои работы</button></div>')
+			document.querySelector('#retube-tab3').insertAdjacentHTML('beforeend', '<div><button class="retube-button retube-button-github" onclick="window.open(`https://discord.gg/8baJSRxXSm`)">Мой Discord сервер</button></div>')
 			document.querySelector('#retube-tab3').insertAdjacentHTML('beforeend', '<div><br/><button class="retube-button retube-button-hardReset">Сбросить ВСЕ настройки ReTube</button></div>')
 			//#endregion
 
@@ -615,6 +616,7 @@
 	function PaintYouTube(paint) {
 		if (!paint) {
 			document.querySelector('#rt-paint')?.remove()
+			console.log(document.querySelector('#rt-paint'))
 			return
 		}
 
@@ -688,7 +690,12 @@
 			'html[dark] ::selection { background: var(--YT-hoverAndPanels2-color) !important; }' + // Цвет выделения текста
 			'::-webkit-scrollbar {width: 9px; height: 9px; background-color: var(--YT-main-color);}' + // Скроллбар
 			'.yt-spec-button-shape-next--mono.yt-spec-button-shape-next--tonal {color: var(--YT-text-color)}' + // Цвет текста кнопок (лайк, дизлайк, сохранить)
-			'#cinematics-container {display: none}' // Отключаем профессиональное освещение
+			'#cinematics-container {display: none}' + // Отключаем профессиональное освещение
+
+			// Красим всплывающую подсказку слева снизу (например при добавлении видео в смотреть позже)
+			'yt-notification-action-renderer[darker-dark-theme] tp-yt-paper-toast.yt-notification-action-renderer {background-color: var(--YT-additional-color); box-shadow: 0 0 10px var(--YT-additional-color)}' +
+			'yt-notification-action-renderer[ui-refresh] #text.yt-notification-action-renderer, yt-notification-action-renderer[ui-refresh] #sub-text.yt-notification-action-renderer {color: var(--YT-text-color)}' +
+			'.yt-spec-button-shape-next--call-to-action-inverse.yt-spec-button-shape-next--text {color: var(--YT-link-color)}'
 			, 'rt-paint')
 
 		// --yt-spec-text-secondary: #aaa
@@ -838,7 +845,7 @@
 			'div.ytp-left-controls, span.ytp-time-separator, a.yt-simple-endpoint.style-scope.ytd-playlist-video-renderer, div.ytp-chapter-title-content, span.ytp-time-display.notranslate, a.yt-simple-endpoint.style-scope.ytd-video-renderer, ' +
 			'yt-formatted-string.style-scope.ytd-video-renderer, a.yt-simple-endpoint.style-scope.ytd-grid-playlist-renderer, span.ytp-caption-segment, a.ytp-title-link.yt-uix-sessionlink.ytp-title-fullerscreen-link, div.ytp-menuitem-label, ' +
 			'#simplebox-placeholder.ytd-comment-simplebox-renderer, #label.ytd-playlist-add-to-option-renderer, .ytd-menu-title-renderer, #rt-videoCount, #content.ytd-channel-tagline-renderer, #first-link.ytd-channel-header-links-view-model, ' +
-			'#more.ytd-channel-header-links-view-model' +
+			'#more.ytd-channel-header-links-view-model, .yt-spec-button-shape-next--call-to-action-inverse.yt-spec-button-shape-next--text' +
 			'{font-family: "Ubuntu" !important; font-weight: 400 !important;}' +
 
 			'.tp-yt-paper-tooltip[style-target=tooltip] {font-size: 1.35rem !important}' +
@@ -847,7 +854,7 @@
 			'.yt-spec-button-shape-next, yt-formatted-string.ytd-menu-service-item-renderer, ytd-text-inline-expander, ytd-rich-list-header-renderer[is-modern-sd] #title.ytd-rich-list-header-renderer, ' +
 			'#time.ytd-macro-markers-list-item-renderer, #title.ytd-video-description-infocards-section-renderer, #subtitle.ytd-video-description-infocards-section-renderer, ' +
 			'#guide-section-title.ytd-guide-section-renderer, .title.ytd-mini-guide-entry-renderer, .ytp-tooltip, .tp-yt-paper-tooltip[style-target=tooltip], ' +
-			'#message.yt-live-chat-viewer-engagement-message-renderer, html, .animated-rolling-number-wiz, #video-title.ytd-reel-item-renderer, .html5-video-player {font-family: "Ubuntu Light Custom" !important}' +
+			'#message.yt-live-chat-viewer-engagement-message-renderer, html, .animated-rolling-number-wiz, #video-title.ytd-reel-item-renderer, .html5-video-player, tp-yt-paper-toast.yt-notification-action-renderer {font-family: "Ubuntu Light Custom" !important}' +
 
 			'ytd-watch-metadata[title-headline-xs] h1.ytd-watch-metadata {font-family: "YouTube Sans"; font-weight: 600}'
 			, 'rt-betterFontStyle')
