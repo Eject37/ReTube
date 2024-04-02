@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ReTube
 // @namespace    http://tampermonkey.net/
-// @version      4.1.7
+// @version      4.2.0
 // @description ReTube
 // @author       Eject
 // @match        *://www.youtube.com/*
@@ -20,50 +20,53 @@
 
 (async () => {
 	//#region Параметры
-	var RTfirstLaunch = await GM_getValue('rt-firstLaunch')
-	var RTcolors = await GM_getValue('rt-colors') == 'true'
-	var RTanimateLoad = await GM_getValue('rt-animateLoad') == 'true'
-	var RThideAllTrash = await GM_getValue('rt-hideAllTrash') == 'true'
-	var RTwatchedVideo = await GM_getValue('rt-watchedVideo') == 'true'
-	var RTbetterFont = await GM_getValue('rt-betterFont') == 'true'
-	var RTvideoDateCreated = await GM_getValue('rt-videoDateCreated') == 'true'
-	var RTfocusFix = await GM_getValue('rt-focusFix') == 'true'
-	var RTnotificationsRemove = await GM_getValue('rt-notificationsRemove') == 'true'
-	var RTcustomTitleIcon = await GM_getValue('rt-customTitleIcon') == 'true'
-	var RTreturnDislikes = await GM_getValue('rt-returnDislikes') == 'true'
-	var RTfullVideoNames = await GM_getValue('rt-fullVideoNames') == 'true'
-	var RTstopChannelTrailer = await GM_getValue('rt-stopChannelTrailer') == 'true'
-	var RTremainingTime = await GM_getValue('rt-remainingTime') == 'true'
-	var RTrememberTime = await GM_getValue('rt-rememberTime') == 'true'
-	var RTvideoQuality = await GM_getValue('rt-videoQuality') == 'true'
-	var RTfixChannelLinks = await GM_getValue('rt-fixChannelLinks') == 'true'
-	var RTshowTranslationTime = await GM_getValue('rt-showTranslationTime') == 'true'
-	var RTdisablePlayerSleep = await GM_getValue('rt-disablePlayerSleep') == 'true'
-	var RTshowVideoCountOnChannel = await GM_getValue('rt-showVideoCountOnChannel') == 'true'
-	var RThotkeysAlwaysActive = await GM_getValue('rt-hotkeysAlwaysActive') == 'true'
-	var RTscrollVolume = await GM_getValue('rt-scrollVolume') == 'true'
-	var RTmiddleClickSearch = await GM_getValue('rt-middleClickSearch') == 'true'
-	var RTtranslateCommentButton = await GM_getValue('rt-translateCommentButton') == 'true'
-	var RTscrollSpeed = await GM_getValue('rt-scrollSpeed') == 'true'
+	let RTfirstLaunch = await GM_getValue('rt-firstLaunch')
+	let RTcolors = await getSavedSetting('rt-colors')
+	let RTanimateLoad = await getSavedSetting('rt-animateLoad')
+	let RThideAllTrash = await getSavedSetting('rt-hideAllTrash')
+	let RTwatchedVideo = await getSavedSetting('rt-watchedVideo')
+	let RTbetterFont = await getSavedSetting('rt-betterFont')
+	let RTvideoDateCreated = await getSavedSetting('rt-videoDateCreated')
+	let RTfocusFix = await getSavedSetting('rt-focusFix')
+	let RTnotificationsRemove = await getSavedSetting('rt-notificationsRemove')
+	let RTcustomTitleIcon = await getSavedSetting('rt-customTitleIcon')
+	let RTreturnDislikes = await getSavedSetting('rt-returnDislikes')
+	let RTfullVideoNames = await getSavedSetting('rt-fullVideoNames')
+	let RTstopChannelTrailer = await getSavedSetting('rt-stopChannelTrailer')
+	let RTremainingTime = await getSavedSetting('rt-remainingTime')
+	let RTrememberTime = await getSavedSetting('rt-rememberTime')
+	let RTvideoQuality = await getSavedSetting('rt-videoQuality')
+	let RTfixChannelLinks = await getSavedSetting('rt-fixChannelLinks')
+	let RTshowTranslationTime = await getSavedSetting('rt-showTranslationTime')
+	let RTdisablePlayerSleep = await getSavedSetting('rt-disablePlayerSleep')
+	let RTshowVideoCountOnChannel = await getSavedSetting('rt-showVideoCountOnChannel')
+	let RThotkeysAlwaysActive = await getSavedSetting('rt-hotkeysAlwaysActive')
+	let RTscrollVolume = await getSavedSetting('rt-scrollVolume')
+	let RTmiddleClickSearch = await getSavedSetting('rt-middleClickSearch')
+	let RTtranslateCommentButton = await getSavedSetting('rt-translateCommentButton')
+	let RTscrollSpeed = await getSavedSetting('rt-scrollSpeed')
+	let RTDefaultVolume = await getSavedSetting('rt-defaultVolume')
 
-	var RTSettingsDateOnVideoBackgroundChange = await GM_getValue('rt-settings-dateOnVideoBackgroundChange') == 'true'
-	var RTColorWatchedLabelBackground = await GM_getValue('rt-color-watchedLabelBackground') ?? '#343a41'
-	var RTColorWatchedBackground = await GM_getValue('rt-color-watchedBackground') ?? '#ffffff'
+	let RTSettingsDateOnVideoBackgroundChange = await getSavedSetting('rt-settings-dateOnVideoBackgroundChange')
+	let RTColorWatchedLabelBackground = await GM_getValue('rt-color-watchedLabelBackground') ?? '#343a41'
+	let RTColorWatchedBackground = await GM_getValue('rt-color-watchedBackground') ?? '#bdbdbd'
 
-	var RTColorYTMain = await GM_getValue('rt-color-YTMain') ?? '#1b222a'
-	var RTColorYTAdditional = await GM_getValue('rt-color-YTAdditional') ?? '#222b35'
-	var RTColorYTPlayer = await GM_getValue('rt-color-YTPlayer') ?? '#11161c'
-	var RTColorYTText = await GM_getValue('rt-color-YTText') ?? '#c9d0d3'
-	var RTColorYTLink = await GM_getValue('rt-color-YTLink') ?? '#a1bad7'
-	var RTColorYTVideoProgress = await GM_getValue('rt-color-YTVideoProgress') ?? '#5785ba'
+	let RTColorYTMain = await GM_getValue('rt-color-YTMain') ?? '#1b222a'
+	let RTColorYTAdditional = await GM_getValue('rt-color-YTAdditional') ?? '#222b35'
+	let RTColorYTPlayer = await GM_getValue('rt-color-YTPlayer') ?? '#11161c'
+	let RTColorYTText = await GM_getValue('rt-color-YTText') ?? '#c9d0d3'
+	let RTColorYTLink = await GM_getValue('rt-color-YTLink') ?? '#a1bad7'
+	let RTColorYTVideoProgress = await GM_getValue('rt-color-YTVideoProgress') ?? '#5785ba'
 
-	var RTSelectYTColors = await GM_getValue('rt-select-YTColors') ?? 'default'
-	var RTSelectVideoQuality = await GM_getValue('rt-select-videoQuality') ?? 'hd1440'
+	let RTSelectYTColors = await GM_getValue('rt-select-YTColors') ?? 'default'
+	let RTSelectVideoQuality = await GM_getValue('rt-select-videoQuality') ?? 'hd1440'
+	let RTSelectTitleIconColor = await GM_getValue('rt-select-title-icon-color') ?? 'blue'
+	let RTDefaultVolumeLevel = await GM_getValue('rt-select-defaultVolumeLevel') ?? '30'
 
-	var RTHeadTop = await GM_getValue('rt-head-top') ?? '100px'
-	var RTHeadLeft = await GM_getValue('rt-head-left') ?? '100px'
+	let RTHeadTop = await GM_getValue('rt-head-top') ?? '100px'
+	let RTHeadLeft = await GM_getValue('rt-head-left') ?? '100px'
 
-	var RTUpdateCheck = await GM_getValue('rt-updateCheck') == 'true' ? true : await GM_getValue('rt-updateCheck') === undefined
+	let RTUpdateCheck = await getSavedSetting('rt-updateCheck') ? true : await GM_getValue('rt-updateCheck') === undefined
 	//#endregion
 	//#region Переменные
 	const api = 'AIzaSyDlRKyiwxqBIU8Yt2k6x7WlKQQJiz9YsnE'
@@ -81,6 +84,7 @@
 			pushCSS('#text-container.ytd-recognition-shelf-renderer, #items:is(.yt-horizontal-list-renderer, .ytd-horizontal-card-list-renderer), h2:is(.ytd-rich-shelf-renderer, .ytd-shelf-renderer), #subtitle.ytd-shelf-renderer, #primary-items.ytd-channel-sub-menu-renderer, .ytd-watch-metadata:is(h1, ytd-badge-supported-renderer, #owner), .thumbnail-and-metadata-wrapper.ytd-playlist-header-renderer, h3.ytd-channel-featured-content-renderer, .ytd-horizontal-card-list-renderer:is(#header, #header-button), h2.ytd-reel-shelf-renderer {animation: cubic-bezier(0.4, 0, 0.2, 1) fadeInRight .8s;} @keyframes fadeInRight {from {opacity: 0;transform: translateX(-20px);}to {opacity: 1;transform: translateX(0px);}}', 'rtAnimFadeInLeft')
 		})
 	}
+	if (RTDefaultVolume) ForceDefaultVideoVolume(true)
 	if (RTvideoDateCreated) finishEvent(() => DateTimeCreated(true, RTSettingsDateOnVideoBackgroundChange))
 	if (RTstopChannelTrailer) StopChannelTrailer()
 	if (RTvideoQuality) VideoQuality()
@@ -94,7 +98,7 @@
 			GM_setValue('rt-firstLaunch', 'yes')
 		}
 
-		if (RTcustomTitleIcon) CustomIcon(true)
+		if (RTcustomTitleIcon) CustomIcon(true, RTSelectTitleIconColor)
 		if (RTfullVideoNames) FullVideoNames(true)
 		if (RTnotificationsRemove) RemoveNotificationNumber()
 		if (RTfocusFix) FocusAndScrollFix(true)
@@ -189,7 +193,7 @@
 
 			document.querySelector('#retube-settings-tab2').insertAdjacentHTML('beforeend', '<div><label class="retube-label"><input type="checkbox" id="rt-checkbox4"></input>Сфокусироваться на видео при наведении</label></div>')
 			document.querySelector('#retube-settings-tab1').insertAdjacentHTML('beforeend', '<div><label class="retube-label"><input type="checkbox" id="rt-checkbox5"></input>Удалить с заголовка страницы количество уведомлений</label></div>')
-			document.querySelector('#retube-settings-tab1').insertAdjacentHTML('beforeend', '<div><label class="retube-label"><input type="checkbox" id="rt-checkbox6"></input>Синяя иконка в заголовке страницы</label></div>')
+			document.querySelector('#retube-settings-tab1').insertAdjacentHTML('beforeend', `<div><label class="retube-label"><input type="checkbox" id="rt-checkbox6"></input>Синяя иконка в заголовке страницы</label><select id="rt-selectTitleIconColor" class="rt-select" ${RTcustomTitleIcon ? '' : ' hidden'}><option value="blue">Синяя</option><option value="gray">Серая</option></select></div>`)
 			document.querySelector('#retube-settings-tab1').insertAdjacentHTML('beforeend', '<div><label class="retube-label"><input type="checkbox" id="rt-checkbox7"></input>Вернуть дизлайки</label></div>')
 			document.querySelector('#retube-settings-tab1').insertAdjacentHTML('beforeend', '<div><label class="retube-label"><input type="checkbox" id="rt-checkbox8"></input>Показывать целиком заголовки видео</label></div>')
 			document.querySelector('#retube-settings-tab2').insertAdjacentHTML('beforeend', '<div><label class="retube-label"><input type="checkbox" id="rt-checkbox9"></input>Запретить автовоспроизведение трейлера канала</label></div>')
@@ -205,6 +209,8 @@
 			document.querySelector('#retube-settings-tab2').insertAdjacentHTML('beforeend', '<div><label class="retube-label" retube-tooltip="https://i.imgur.com/YNFVrke.png"><input type="checkbox" id="rt-checkbox19"></input>Открывать результаты поиска в новой вкладке (СКМ)</label></div>')
 			document.querySelector('#retube-settings-tab2').insertAdjacentHTML('beforeend', '<div><label class="retube-label" retube-tooltip="https://i.imgur.com/PyJ1GvF.png"><input type="checkbox" id="rt-checkbox20"></input>Добавить кнопку перевода комментариев</label></div>')
 			document.querySelector('#retube-settings-tab2').insertAdjacentHTML('beforeend', '<div><label class="retube-label" retube-tooltip="Правый клик: стандартная скорость||Колесо: регулировка скорости на 0.1x"><input type="checkbox" id="rt-checkbox21"></input>Изменение скорости видео на кнопке \'Настройки\'</label></div>')
+			document.querySelector('#retube-settings-tab2').insertAdjacentHTML('beforeend', `<div><label class="retube-label"><input type="checkbox" id="rt-checkbox23"></input>Принудительная громкость видео при запуске</label><select id="rt-selectDefaultVolume" class="rt-select" ${RTDefaultVolume ? '' : ' hidden'}><option value="100">100%</option><option value="80">80%</option><option value="70">70%</option><option value="60">60%</option><option value="50">50%</option><option value="40">40%</option><option value="30">30%</option><option value="20">20%</option><option value="10">10%</option><option value="5">5%</option><option value="1">1%</option><option value="0">0%</option></select></div>`)
+
 			document.querySelector('#retube-settings-tab2').insertAdjacentHTML('beforeend', '<br/><div><label class="retube-label"><input type="checkbox" id="rt-checkbox22"></input>Автоматическая проверка обновлений скрипта</label></div>')
 
 			document.querySelector('#retube-tab1').insertAdjacentHTML('beforeend', '<br/><button class="retube-button retube-button-save">Сохранить</button>')
@@ -297,6 +303,7 @@
 			const checkbox20 = document.querySelector('#rt-checkbox20')
 			const checkbox21 = document.querySelector('#rt-checkbox21')
 			const checkbox22 = document.querySelector('#rt-checkbox22')
+			const checkbox23 = document.querySelector('#rt-checkbox23')
 			const checkboxSettings1 = document.querySelector('#rt-checkboxSettingsDateOnVideoBackground')
 			const color1 = document.querySelector('#rt-color1')
 			const color2 = document.querySelector('#rt-color2')
@@ -310,6 +317,8 @@
 
 			const selectYTColors = document.querySelector('#rt-selectRTColors')
 			const selectVideoQuality = document.querySelector('#rt-selectVideoQuality')
+			const selectTitleIconColor = document.querySelector('#rt-selectTitleIconColor')
+			const selectDefaultVolume = document.querySelector('#rt-selectDefaultVolume')
 
 			checkboxMain.checked = RTcolors
 			checkboxAnimateLoad.checked = RTanimateLoad
@@ -336,6 +345,7 @@
 			checkbox20.checked = RTtranslateCommentButton
 			checkbox21.checked = RTscrollSpeed
 			checkbox22.checked = RTUpdateCheck
+			checkbox23.checked = RTDefaultVolume
 			checkboxSettings1.checked = RTSettingsDateOnVideoBackgroundChange
 			color1.value = RTColorWatchedLabelBackground
 			color2.value = RTColorWatchedBackground
@@ -349,6 +359,8 @@
 
 			selectYTColors.value = RTSelectYTColors
 			selectVideoQuality.value = RTSelectVideoQuality
+			selectTitleIconColor.value = RTSelectTitleIconColor
+			selectDefaultVolume.value = RTDefaultVolumeLevel
 
 			document.querySelectorAll('.retube-button-save').forEach(x => x.addEventListener('click', function () {
 				GM_setValue('rt-colors', checkboxMain.checked ? 'true' : 'false')
@@ -375,6 +387,8 @@
 				GM_setValue('rt-middleClickSearch', checkbox19.checked ? 'true' : 'false')
 				GM_setValue('rt-translateCommentButton', checkbox20.checked ? 'true' : 'false')
 				GM_setValue('rt-scrollSpeed', checkbox21.checked ? 'true' : 'false')
+				GM_setValue('rt-defaultVolume', checkbox23.checked ? 'true' : 'false')
+
 				GM_setValue('rt-updateCheck', checkbox22.checked ? 'true' : 'false')
 
 				GM_setValue('rt-settings-dateOnVideoBackgroundChange', checkboxSettings1.checked ? 'true' : 'false')
@@ -390,6 +404,8 @@
 
 				GM_setValue('rt-select-YTColors', selectYTColors.value)
 				GM_setValue('rt-select-videoQuality', selectVideoQuality.value)
+				GM_setValue('rt-select-title-icon-color', selectTitleIconColor.value)
+				GM_setValue('rt-select-defaultVolumeLevel', selectDefaultVolume.value)
 
 				GM_setValue('rt-head-top', document.querySelector('#retube-menu').style.top)
 				GM_setValue('rt-head-left', document.querySelector('#retube-menu').style.left)
@@ -452,7 +468,7 @@
 			checkbox3.addEventListener('change', e => DateTimeCreated(e.target.checked, document.querySelector('#rt-checkboxSettingsDateOnVideoBackground').checked))
 			checkboxSettings1.addEventListener('change', e => DateTimeCreated(document.querySelector('#rt-checkbox3').checked, e.target.checked))
 			checkbox4.addEventListener('change', e => FocusAndScrollFix(e.target.checked))
-			checkbox6.addEventListener('change', e => CustomIcon(e.target.checked))
+			checkbox6.addEventListener('change', e => selectTitleIconColor.toggleAttribute('hidden', !e.target.checked) & CustomIcon(e.target.checked, selectTitleIconColor.value))
 			checkbox7.addEventListener('change', e => { if (e.target.checked) ReturnDislikes() })
 			checkbox8.addEventListener('change', e => FullVideoNames(e.target.checked))
 			checkbox9.addEventListener('change', e => { if (e.target.checked) StopChannelTrailer() })
@@ -465,6 +481,7 @@
 			checkbox17.addEventListener('change', e => { if (e.target.checked) HotkeysAlwaysActive() })
 			checkbox18.addEventListener('change', e => { if (e.target.checked) ScrollVolume() })
 			checkbox21.addEventListener('change', e => { if (e.target.checked) ScrollSpeed() })
+			checkbox23.addEventListener('change', e => (RTDefaultVolume = e.target.checked, ForceDefaultVideoVolume(e.target.checked), selectDefaultVolume.toggleAttribute('hidden', !e.target.checked)));
 			checkbox1.addEventListener('change', e => document.querySelectorAll(".rt-colorWatched").forEach(x => x.toggleAttribute('hidden', !e.target.checked)))
 			checkbox3.addEventListener('change', e => document.querySelector(".rt-settingsDateOnVideoBackgroundDiv").toggleAttribute('hidden', !e.target.checked))
 
@@ -562,6 +579,20 @@
 				}
 			})
 
+			selectTitleIconColor.addEventListener("change", e => {
+				const selected = e.target.value
+				if (selected == 'blue') {
+					CustomIcon(true, 'blue')
+				}
+				else if (selected == 'gray') {
+					CustomIcon(true, 'gray')
+				}
+			})
+
+			selectDefaultVolume.addEventListener("change", e => {
+				RTDefaultVolumeLevel = e.target.value
+			})
+
 			const dragHeader = (() => {
 				let isDragging = false
 				let offsetX, offsetY
@@ -636,7 +667,7 @@
 			'html[dark], [dark] {--yt-spec-badge-chip-background: var(--YT-additional-color); --yt-spec-button-chip-background-hover: var(--YT-hover-and-dateVideoLoad-color)}' + // Цвет фона описания видео
 			'.yt-spec-button-shape-next--mono.yt-spec-button-shape-next--tonal:hover {background-color: var(--YT-hoverVideoButton-color)}' + // Цвет фона лайков и прочих кнопок при наведении
 			'ytd-playlist-panel-renderer[use-color-palette][is-dark-theme] {--yt-active-playlist-panel-background-color: var(--YT-hover-and-dateVideoLoad-color)}' + // Цвет фона текущего видео в плейлисте
-			'html[dark], [dark] {--yt-spec-call-to-action: var(--YT-link-color); --yt-spec-themed-blue: var(--YT-link-color)} .yt-core-attributed-string__link--call-to-action-color {color: var(--yt-spec-call-to-action) !important} .yt-spec-button-shape-next--call-to-action.yt-spec-button-shape-next--text {color: var(--yt-spec-call-to-action)}' + // Цвет ссылок
+			'html[dark], [dark] {--yt-spec-call-to-action: var(--YT-link-color); --yt-spec-themed-blue: var(--YT-link-color)} .yt-core-attributed-string__link--call-to-action-color {color: var(--yt-spec-call-to-action) !important} .yt-spec-button-shape-next--call-to-action.yt-spec-button-shape-next--text {color: var(--yt-spec-call-to-action)} .yt-spec-button-shape-next--call-to-action.yt-spec-button-shape-next--text:hover {background-color: var(--YT-additional-color)}' + // Цвет ссылок
 			'html[dark], [dark] {--ytd-searchbox-background: var(--YT-main-color)}' + // Задний цвет окна поиска
 			'html[dark] {--yt-live-chat-background-color: var(--YT-main-color)}' +
 			'ytd-playlist-panel-renderer#playlist {--yt-lightsource-secondary-title-color: var(--YT-text-color) !important; --yt-lightsource-primary-title-color: var(--YT-text-color) !important}' + // Цвет текста активного видео в плейлисте (название + канал)
@@ -743,6 +774,9 @@
 			'ytd-search-pyv-renderer, [class^="ytd-promoted-"], ytd-video-renderer + ytd-shelf-renderer, ytd-video-renderer + ytd-reel-shelf-renderer, ' +
 			'#clarify-box, .ytd-watch-flexy.attached-message, ytd-popup-container tp-yt-paper-dialog ytd-single-option-survey-renderer, #donation-shelf ytd-donation-unavailable-renderer, ' +
 			'.sparkles-light-cta, ytd-feed-nudge-renderer, .ytp-pause-overlay-container, .ytp-settings-menu .ytp-panel-menu > .ytp-menuitem[role="menuitemcheckbox"] {display: none !important}'
+
+			// Скрываем надпись на кнопке 'Сохранить'
+			//'button:has(path[d^="M22 13h-4v4h-2v-4h-4v-"]) [class*=text] {display: none} button:has(path[d^="M22 13h-4v4h-2v-4h-4v-"]) .yt-spec-button-shape-next__icon {margin: -9px !important}'
 			, 'rt-hideTrashStyle')
 
 		// Скрываем кнопки под видео
@@ -962,11 +996,13 @@
 		} catch { }
 	}
 
-	function CustomIcon(custom) {
+	function CustomIcon(custom, color) {
 		document.querySelector('#rt-titleIcon')?.remove()
 		const link = document.createElement('link')
 		link.rel = 'icon'
-		link.href = custom ? 'https://github.com/Eject37/ReTube/raw/main/yt-favicon2.ico' : 'https://www.youtube.com/s/desktop/79c80fdc/img/favicon.ico'
+
+		let customIconColor = color == 'blue' ? 'https://github.com/Eject37/ReTube/raw/main/yt-favicon2.ico' : 'https://github.com/Eject37/ReTube/raw/main/Gray6.ico'
+		link.href = custom ? customIconColor : 'https://www.youtube.com/s/desktop/79c80fdc/img/favicon.ico'
 		if (custom) link.id = 'rt-titleIcon'
 		document.querySelector('head').appendChild(link)
 	}
@@ -1239,11 +1275,21 @@
 	}
 
 	function DisableSleep() {
-		const _lact = {
-			set: () => 0,
-			get: () => Date.now()
-		}
-		Object.defineProperty(window, "_lact", _lact)
+		setInterval(() => {
+			if (!document.hasFocus()) {
+				document.dispatchEvent(
+					new KeyboardEvent(
+						'keyup',
+						{
+							keyCode: 143,
+							which: 143,
+							bubbles: true,
+							cancelable: true,
+						}
+					)
+				);
+			}
+		}, 1000 * 60 * 5); // 5 min
 	}
 
 	function ShowVideoCountOnChannel() {
@@ -1282,59 +1328,65 @@
 	}
 
 	function HotkeysAlwaysActive() {
-		document.addEventListener('keydown', e => currentPage() == 'watch' && setFocus(e.target))
+		let cachedMode = "";
+		document.addEventListener("keydown", function onEvent(e) {
+			if (e.code !== "Space") return;
+
+			let ae = document.activeElement;
+			if (ae.tagName.toLowerCase() == "input" || ae.hasAttribute("contenteditable")) return;
+
+			let player = document.querySelector(".html5-video-player");
+			if (player.classList.contains("paused-mode")) cachedMode = "paused-mode";
+			if (player.classList.contains("playing-mode")) cachedMode = "playing-mode";
+			if (player.classList.contains("ended-mode")) cachedMode = "ended-mode";
+
+			setTimeout(() => {
+				let player = document.querySelector(".html5-video-player");
+				if (player.classList.contains(cachedMode)) {
+					movie_player.focus({ preventScroll: true })
+					document.querySelector("button.ytp-play-button").click();
+					cachedMode = "";
+				}
+			}, 200);
+		});
+
+		document.addEventListener('keyup', e => currentPage() == 'watch' && setFocus(e.target))
 		document.addEventListener('click', e => currentPage() == 'watch' && e.isTrusted && setFocus(e.target))
 		function setFocus(target) {
 			if (['input', 'textarea', 'select'].includes(target.localName) || target.isContentEditable) return;
-			document.querySelector('#movie_player')?.focus({ preventScroll: true })
+			movie_player.focus({ preventScroll: true })
 		}
 	}
 
 	function ScrollVolume() {
-		pushCSS('.YSV_hud {display: flex; flex-direction: column; justify-content: flex-end; align-items: center; position: absolute; top: 0; bottom: 0; left: 0; right: 0; opacity: 0; transition: opacity 500ms ease 0s; z-index: 999; pointer-events: none}' +
-			'.YSV_text {position: absolute; text-align: center; width: 65px; height: 50px; color: white; margin-bottom: 250px; background-color: rgba(0 0 0 / 30%); border-radius: 20px; font-weight: bold; backdrop-filter: blur(4px); font-size: 175%}', 'rt-scrollVolumeStyle')
-
-		const createHud = () => {
-			const hud = document.createElement('div')
-			hud.classList.add('YSV_hud')
-			hud.innerHTML = '<div class="YSV_text"></div>'
-			return hud
-		}
-
-		waitSelector('video').then(() => {
-			let id
-			const hud = createHud()
-
-			const player = document.querySelector('.html5-video-player')
-
-			document.querySelector('.ytp-left-controls').appendChild(hud)
-			const showHud = volume => {
-				clearTimeout(id)
-				document.querySelector('.YSV_text').innerHTML = `${volume}%`
-				hud.style.opacity = 1
-				id = setTimeout(() => (hud.style.opacity = 0), 800)
-			}
-
-			player.onwheel = function (e) {
-				if (!e.shiftKey) return
-				const dir = (e.deltaY > 0 ? -1 : 1) * 1
-				const vol = Math.max(Math.min(player.getVolume() + 1 * dir, 100), 0)
-				if (vol > 0 && player.isMuted()) player.unMute()
-				player.setVolume(vol)
+		waitSelector('#movie_player video').then(video => {
+			video.addEventListener('volumechange', () => {
+				let currentVideoVolume = movie_player.getVolume()
+				showOSD(currentVideoVolume + '%');
 
 				let obj = {
-					"data": JSON.stringify({ "volume": vol, "muted": false }),
+					"data": JSON.stringify({ "volume": currentVideoVolume, "muted": false }),
 					"expiration": 17125032379999,
 					"creation": Date.now()
 				};
 
 				localStorage.setItem("yt-player-volume", JSON.stringify(obj));
 				sessionStorage.setItem("yt-player-volume", JSON.stringify(obj));
+			})
 
-				showHud(vol)
-				e.preventDefault()
-				e.stopImmediatePropagation()
-			}
+			waitSelector('.html5-video-container').then(container => {
+				container.addEventListener('wheel', evt => {
+					if (!evt.shiftKey) return;
+
+					const dir = (evt.deltaY > 0 ? -1 : 1) * 1
+					const vol = Math.max(Math.min(Math.round(movie_player.getVolume()) + 1 * dir, 100), 0)
+					vol > 0 && movie_player.isMuted() && movie_player.unMute()
+					movie_player.setVolume(vol)
+
+					evt.preventDefault();
+					evt.stopImmediatePropagation();
+				}, { capture: true });
+			});
 		})
 	}
 
@@ -1372,6 +1424,7 @@
 			}
 			btn.onauxclick = btn.onclick
 		})
+
 		waitSelector('.sbsb_c').then(() => {
 			document.querySelectorAll('.sbsb_c').forEach(x => {
 				x.onclick = function (e) {
@@ -1451,7 +1504,7 @@
 		const QS_BUTTON_CONTAINER = "#header>#header-author>yt-formatted-string";
 
 		/* User settings */
-		var TRANSLATE_TEXT = "Перевести", UNDO_TEXT = "Вернуть", TARGET = navigator.language || navigator.userLanguage;
+		let TRANSLATE_TEXT = "Перевести", UNDO_TEXT = "Вернуть", TARGET = navigator.language || navigator.userLanguage;
 
 		inject()
 
@@ -1520,29 +1573,7 @@
 	}
 
 	function ScrollSpeed() {
-		if (!document.querySelector('#rt-scrollSpeedStyle'))
-			pushCSS('.YSS_hud {display: flex; flex-direction: column; justify-content: flex-end; align-items: center; position: absolute; top: 0; bottom: 0; left: 0; right: 0; opacity: 0; transition: opacity 500ms ease 0s; z-index: 999; pointer-events: none}' +
-				'.YSS_text {position: absolute; text-align: center; width: 65px; height: 50px; color: white; margin-bottom: 250px; background-color: rgba(0 0 0 / 30%); border-radius: 20px; font-weight: bold; backdrop-filter: blur(4px); font-size: 175%}', 'rt-scrollSpeedStyle')
-
-		const createHud = () => {
-			const hud = document.createElement('div')
-			hud.classList.add('YSS_hud')
-			hud.innerHTML = '<div class="YSS_text"></div>'
-			return hud
-		}
-
 		waitSelector('.ytp-settings-button').then(container => {
-			let id
-			const hud = createHud()
-			document.querySelector('.ytp-left-controls').appendChild(hud)
-
-			const showHud = speed => {
-				clearTimeout(id)
-				document.querySelector('.YSS_text').innerHTML = `${speed}x`
-				hud.style.opacity = 1
-				id = setTimeout(() => (hud.style.opacity = 0), 800)
-			}
-
 			container.addEventListener('wheel', e => {
 				try {
 					e.preventDefault()
@@ -1550,7 +1581,7 @@
 					const currentSpeed = player.playbackRate
 					const newSpeed = e.deltaY < 0 ? currentSpeed + 0.1 : currentSpeed - 0.1
 					player.playbackRate = parseFloat(newSpeed.toFixed(2))
-					showHud(document.querySelector('.video-stream.html5-main-video').playbackRate)
+					showOSD(document.querySelector('.video-stream.html5-main-video').playbackRate + 'x')
 				} catch { }
 			})
 			container.addEventListener('contextmenu', e => {
@@ -1559,9 +1590,22 @@
 					e.stopPropagation()
 					e.stopImmediatePropagation()
 					document.querySelector('.video-stream.html5-main-video').playbackRate = 1
-					showHud(document.querySelector('.video-stream.html5-main-video').playbackRate)
+					showOSD(document.querySelector('.video-stream.html5-main-video').playbackRate + 'x')
 				} catch { }
 			})
+		})
+	}
+
+	function ForceDefaultVideoVolume(enabled) {
+		if (!enabled) {
+			RTDefaultVolume = false
+			return;
+		}
+
+		waitSelector('#movie_player video').then(video => {
+			video.addEventListener('canplay', () => {
+				if (RTDefaultVolume) movie_player.setVolume(RTDefaultVolumeLevel);
+			}, { capture: true });
 		})
 	}
 	//#endregion
@@ -1708,16 +1752,6 @@
 		const ts = Math.abs(+time_sec), d = ~~(ts / 86400), h = ~~((ts % 86400) / 3600), m = ~~((ts % 3600) / 60), s = ~~(ts % 60)
 		return (d ? `${d}d ` : '') + (h ? (d ? h.toString().padStart(2, '0') : h) + ':' : '') + (h ? m.toString().padStart(2, '0') : m) + ':' + s.toString().padStart(2, '0')
 	}
-	function getPlayerState(state) {
-		return {
-			'-1': 'UNSTARTED',
-			0: 'ENDED',
-			1: 'PLAYING',
-			2: 'PAUSED',
-			3: 'BUFFERING',
-			5: 'CUED'
-		}[state || document.querySelector('#movie_player').getPlayerState()];
-	}
 	function getChannelId() {
 		const isChannelId = id => id && /UC([a-z0-9-_]{22})$/i.test(id);
 		let result = [
@@ -1749,6 +1783,43 @@
 		// update
 		// window.addEventListener('transitionend', () => isURLChange() && callback());
 		document.addEventListener('yt-navigate-finish', () => isURLChange() && callback());
+	}
+	function showOSD(text) {
+		if (!text || (currentPage() != 'embed' && currentPage() != 'watch')) return;
+		if (typeof this.fadeBezel === 'number') clearTimeout(this.fadeBezel); // reset fade
+
+		const bezelEl = document.body.querySelector('.ytp-bezel-text');
+		if (!bezelEl) return console.error(`showOSD ${text}=>${bezelEl}`);
+
+		const bezelContainer = bezelEl.parentElement.parentElement, CLASS_VALUE = 'ytp-text-root', SELECTOR = '.' + CLASS_VALUE; // для css
+
+		if (!this.bezel_css_inited) {
+			this.bezel_css_inited = true;
+			pushCSS(
+				`${SELECTOR} { display: block !important; }
+				  ${SELECTOR} .ytp-bezel-text-wrapper {
+					 pointer-events: none;
+					 z-index: 40 !important;
+				  }
+				  ${SELECTOR} .ytp-bezel-text { display: inline-block !important; }
+				  ${SELECTOR} .ytp-bezel { display: none !important; }`);
+		}
+
+		bezelEl.textContent = text;
+		bezelContainer.classList.add(CLASS_VALUE);
+
+		let ms = 1200;
+		if ((text = String(text)) && (text.endsWith('%') || text.endsWith('x'))) {
+			ms = 600
+		}
+
+		this.fadeBezel = setTimeout(() => {
+			bezelContainer.classList.remove(CLASS_VALUE);
+			bezelEl.textContent = ''; // fix not showing bug when frequent calls
+		}, ms);
+	}
+	async function getSavedSetting(key) {
+		return await GM_getValue(key) == 'true';
 	}
 	//#endregion
 })()
