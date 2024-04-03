@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ReTube
 // @namespace    http://tampermonkey.net/
-// @version      4.2.0
+// @version      4.2.1
 // @description ReTube
 // @author       Eject
 // @match        *://www.youtube.com/*
@@ -1359,21 +1359,7 @@
 	}
 
 	function ScrollVolume() {
-		waitSelector('#movie_player video').then(video => {
-			video.addEventListener('volumechange', () => {
-				let currentVideoVolume = movie_player.getVolume()
-				showOSD(currentVideoVolume + '%');
-
-				let obj = {
-					"data": JSON.stringify({ "volume": currentVideoVolume, "muted": false }),
-					"expiration": 17125032379999,
-					"creation": Date.now()
-				};
-
-				localStorage.setItem("yt-player-volume", JSON.stringify(obj));
-				sessionStorage.setItem("yt-player-volume", JSON.stringify(obj));
-			})
-
+		waitSelector('#movie_player video').then(() => {
 			waitSelector('.html5-video-container').then(container => {
 				container.addEventListener('wheel', evt => {
 					if (!evt.shiftKey) return;
@@ -1382,6 +1368,18 @@
 					const vol = Math.max(Math.min(Math.round(movie_player.getVolume()) + 1 * dir, 100), 0)
 					vol > 0 && movie_player.isMuted() && movie_player.unMute()
 					movie_player.setVolume(vol)
+
+					let currentVideoVolume = movie_player.getVolume()
+					showOSD(currentVideoVolume + '%');
+
+					let obj = {
+						"data": JSON.stringify({ "volume": currentVideoVolume, "muted": false }),
+						"expiration": 17125032379999,
+						"creation": Date.now()
+					};
+
+					localStorage.setItem("yt-player-volume", JSON.stringify(obj));
+					sessionStorage.setItem("yt-player-volume", JSON.stringify(obj));
 
 					evt.preventDefault();
 					evt.stopImmediatePropagation();
@@ -1603,7 +1601,7 @@
 		}
 
 		waitSelector('#movie_player video').then(video => {
-			video.addEventListener('canplay', () => {
+			video.addEventListener('loadeddata', () => {
 				if (RTDefaultVolume) movie_player.setVolume(RTDefaultVolumeLevel);
 			}, { capture: true });
 		})
