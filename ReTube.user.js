@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ReTube
 // @namespace    http://tampermonkey.net/
-// @version      4.2.2
+// @version      4.2.3
 // @description ReTube
 // @author       Eject
 // @match        *://www.youtube.com/*
@@ -70,9 +70,7 @@
 	//#endregion
 	//#region Переменные
 	const api = 'AIzaSyBYoUuFiFjwRsvqPEbEIdGngobbeL9xs9o'
-	let playerHoverHandler
-	let isScrolling = false
-	let wheel = false
+	let playerHoverHandler, isScrolling = false, wheel = false
 	//#endregion
 
 	if (RTanimateLoad) {
@@ -163,7 +161,8 @@
 				'.rt-select {border-color: rgb(72 75 91); border-radius: 10px; color: rgb(201 208 211); background: rgb(96 100 110 / 37%); height: 27px; margin-left: 3px;} .rt-select:focus {outline: none}' +
 				'option {border-color: rgb(72 75 91); border-radius: 10px; background: rgb(96 100 110)}' +
 				'.rt-label-head {font-weight: bold; margin-left: 6px; font-size: 20px; pointer-events: none} #rt-head {background: linear-gradient(rgb(67 77 105 / 37%), transparent); border-radius: 20px; display: flex; justify-content: space-between}' +
-				'#rt-close-head {margin-left: auto}'
+				'#rt-close-head {margin-left: auto}' +
+				'.retube-label > input {accent-color: #9ba8c2} .retube-label > .important {accent-color: #7fa682}'
 				, 'retube-menu-style')
 			//#endregion
 
@@ -211,7 +210,7 @@
 			document.querySelector('#retube-settings-tab2').insertAdjacentHTML('beforeend', '<div><label class="retube-label" retube-tooltip="Правый клик: стандартная скорость||Колесо: регулировка скорости на 0.1x"><input type="checkbox" id="rt-checkbox21"></input>Изменение скорости видео на кнопке \'Настройки\'</label></div>')
 			document.querySelector('#retube-settings-tab2').insertAdjacentHTML('beforeend', `<div><label class="retube-label"><input type="checkbox" id="rt-checkbox23"></input>Принудительная громкость видео при запуске</label><select id="rt-selectDefaultVolume" class="rt-select" ${RTDefaultVolume ? '' : ' hidden'}><option value="100">100%</option><option value="80">80%</option><option value="70">70%</option><option value="60">60%</option><option value="50">50%</option><option value="40">40%</option><option value="30">30%</option><option value="20">20%</option><option value="10">10%</option><option value="5">5%</option><option value="1">1%</option><option value="0">0%</option></select></div>`)
 
-			document.querySelector('#retube-settings-tab2').insertAdjacentHTML('beforeend', '<br/><div><label class="retube-label"><input type="checkbox" id="rt-checkbox22"></input>Автоматическая проверка обновлений скрипта</label></div>')
+			document.querySelector('#retube-settings-tab2').insertAdjacentHTML('beforeend', '<br/><div><label class="retube-label"><input type="checkbox" id="rt-checkbox22" class="important"></input>Автоматическая проверка обновлений скрипта</label></div>')
 
 			document.querySelector('#retube-tab1').insertAdjacentHTML('beforeend', '<br/><button class="retube-button retube-button-save">Сохранить</button>')
 			//#endregion
@@ -693,7 +692,7 @@
 			'svg.external-icon > svg > g > path:nth-child(1), #card svg g g path:nth-child(1) {fill: var(--YT-icon-color)}' + // Иконка ютуба
 			'#logo-icon > svg > g > g:nth-child(1) > path:nth-child(1) {fill: var(--YT-icon-color)}' + // Иконка ютуба (старый дизайн)
 			'.html5-video-player {background: var(--YT-player-color)}' + // Цвет фона плеера
-			'#time-status.ytd-thumbnail-overlay-time-status-renderer {background: var(--YT-videoTime-color); backdrop-filter: blur(10px)}' + // Фон рамки с длительносьтю видео
+			'#time-status.ytd-thumbnail-overlay-time-status-renderer, .badge-shape-wiz--default.badge-shape-wiz--overlay {background: var(--YT-videoTime-color); backdrop-filter: blur(10px)}' + // Фон рамки с длительносьтю видео
 			'.yt-spec-icon-badge-shape--type-notification .yt-spec-icon-badge-shape__badge {background-color: var(--YT-notificationsBadge-color)}' + // Цвет бэйджа количества уведомлений
 			'sup.ytp-swatch-color-white {color: var(--YT-link-color)}' + // Цвет надписей HD в выборе качества
 			'.ytp-chrome-controls .ytp-button[aria-pressed]:after {background-color: var(--YT-panelActiveButton-color) !important}' + // Цвет полоски снизу включённых субтитров
@@ -707,7 +706,7 @@
 			'.ytp-contextmenu .ytp-menuitem[aria-checked=true] .ytp-menuitem-toggle-checkbox {background: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIHZpZXdCb3g9IjAgMCAyNCAyNCIgdmVyc2lvbj0iMS4xIj48cGF0aCBkPSJNOSAxNi4yTDQuOCAxMmwtMS40IDEuNEw5IDE5IDIxIDdsLTEuNC0xLjRMOSAxNi4yeiIgZmlsbD0iI2ZmZiIgLz48L3N2Zz4=) !important;}' + // Фикс отображения чекбокса
 			'html[dark], [dark] {--yt-spec-static-overlay-background-heavy: var(--YT-videoTime-color); --yt-spec-static-overlay-background-solid: var(--YT-videoTime-color)}' + // Кнопка на видео добавить в смотреть позже + при наведении
 			'html[dark], [dark] {--yt-spec-static-overlay-background-brand: var(--YT-notificationsBadge-color)}' + // Кнопка/надпись на главной странице В эфире под видео
-			'#icon > yt-icon-shape > icon-shape > div > svg > g > path {fill: var( --YT-icon-color)}' + // Иконка YouTube Shorts при поиске видео
+			'#icon.ytd-reel-shelf-renderer path, #icon.ytd-rich-shelf-renderer path {fill: var( --YT-icon-color)}' + // Иконка YouTube Shorts на главной странице и в сайдбаре
 			'.tp-yt-paper-tooltip[style-target=tooltip], .ytp-tooltip-text {background-color: var(--YT-videoTime-color) !important; backdrop-filter: blur(10px)}' + // Задний цвет всплывающих подсказок (Нравится, Не нравится..)
 			'html[dark] {--yt-live-chat-banner-gradient-scrim: linear-gradient(var(--YT-hover-and-dateVideoLoad-color), transparent )}' + // Градиент в чате ютуба закрепленного сообщения
 			'#top-level-buttons-computed #segmented-dislike-button ytd-toggle-button-renderer *[aria-pressed="true"] yt-icon {color: rgb(249 137 137) !important}' + // Цвет кнопки дизлайка (нажатой)
@@ -736,7 +735,7 @@
 			'.yt-spec-button-shape-next--call-to-action-inverse.yt-spec-button-shape-next--text {color: var(--YT-link-color)}' +
 
 			// Красим панель 'До начала трансляции'
-			'.ytp-offline-slate-bar {background: rgba(0, 0, 0, 0.65) !important; backdrop-filter: blur(15px) !important} .ytp-offline-slate-button {background: var(--YT-searchBorderHover-color) !important; border-radius: 15px !important}'
+			'.ytp-offline-slate-bar {background: rgba(0, 0, 0, 0.4) !important; backdrop-filter: blur(15px) !important} .ytp-offline-slate-button {background: var(--YT-searchBorderHover-color) !important; border-radius: 15px !important}'
 			, 'rt-paint')
 
 		// --yt-spec-text-secondary: #aaa
@@ -852,7 +851,8 @@
 			'#title.ytd-structured-description-video-lockup-renderer, #subtitle.ytd-structured-description-video-lockup-renderer, h4.ytd-macro-markers-list-item-renderer, ' +
 			'.metadata.ytd-notification-renderer, .metadata-stats.ytd-playlist-byline-renderer, .badge.ytd-badge-supported-renderer, #content-text.ytd-comment-view-model, ' +
 			'.yt-content-metadata-view-model-wiz--medium-text .yt-content-metadata-view-model-wiz__metadata-text, .truncated-text-wiz--medium-text, .yt-attribution-view-model-wiz--medium-text .yt-attribution-view-model-wiz__attribution-text, ' +
-			'#published-time-text.ytd-comment-view-model {font-family: Ubuntu !important;}' +
+			'#published-time-text.ytd-comment-view-model, #text.ytd-alert-with-button-renderer, #home-content-text.ytd-post-renderer, .badge-shape-wiz, ' +
+			'tp-yt-paper-button, #index.ytd-playlist-video-renderer {font-family: Ubuntu !important;}' +
 
 			'div.style-scope.ytd-rich-grid-row {font-weight: 400 !important;}' +
 
@@ -891,7 +891,8 @@
 			'#time.ytd-macro-markers-list-item-renderer, #title.ytd-video-description-infocards-section-renderer, #subtitle.ytd-video-description-infocards-section-renderer, ' +
 			'#guide-section-title.ytd-guide-section-renderer, .title.ytd-mini-guide-entry-renderer, .ytp-tooltip, .tp-yt-paper-tooltip[style-target=tooltip], ' +
 			'#message.yt-live-chat-viewer-engagement-message-renderer, html, .animated-rolling-number-wiz, #video-title.ytd-reel-item-renderer, .html5-video-player, tp-yt-paper-toast.yt-notification-action-renderer, ' +
-			'.truncated-text-wiz--medium-text .truncated-text-wiz__absolute-button {font-family: "Ubuntu Light Custom" !important}' +
+			'.truncated-text-wiz--medium-text .truncated-text-wiz__absolute-button, yt-formatted-string.ytd-menu-service-item-download-renderer, ' +
+			'.more-button.ytd-comment-view-model, .less-button.ytd-comment-view-model {font-family: "Ubuntu Light Custom" !important}' +
 
 			'ytd-watch-metadata[title-headline-xs] h1.ytd-watch-metadata {font-family: "YouTube Sans"; font-weight: 600}'
 			, 'rt-betterFontStyle')
@@ -900,9 +901,8 @@
 	function DateTimeCreated(date, style2) {
 		if (currentPage() != 'watch') return
 
-		document.querySelector('.video-date')?.remove()
-		document.querySelector('#dateVideoStyle')?.remove()
-		document.querySelector('#dateVideoStyle2')?.remove()
+		// Удаление старых элементов и стилей
+		['.video-date', '#dateVideoStyle', '#dateVideoStyle2'].forEach(selector => document.querySelector(selector)?.remove());
 
 		if (!date) return
 
@@ -917,24 +917,20 @@
 				hour12: false,
 			}).replace(',', '')
 
-			waitSelector('#title > h1').then(() => {
-				SetText()
-				function SetText() {
-					document.querySelector('.video-date')?.remove()
+			waitSelector('#title > h1').then(el => {
+				document.querySelector('.video-date')?.remove()
 
-					const metadataElement = document.querySelector('#title > h1')
-					const label = document.createElement('span')
-					label.classList.add('video-date')
-					label.textContent = dateCreated
+				const label = document.createElement('span')
+				label.classList.add('video-date')
+				label.textContent = dateCreated
 
-					if (!document.querySelector('#dateVideoStyle')) {
-						pushCSS('.video-date {border-radius: 18px; padding-inline: 7px; white-space: nowrap; margin-top: 2px; height: 23px; margin-left: 5px; font-size: 95%; display: inline-flex; align-items: center; background-color: var(--yt-spec-button-chip-background-hover); animation: 1s show ease} @keyframes show { from { opacity: 0; } to { opacity: 1; } }', 'dateVideoStyle')
-						if (style2) {
-							pushCSS('.video-date {background-color: var(--yt-spec-base-background); filter: drop-shadow(0 0 1px rgb(201 208 211))}', 'dateVideoStyle2')
-						}
+				if (!document.querySelector('#dateVideoStyle')) {
+					pushCSS('.video-date {border-radius: 18px; padding-inline: 7px; white-space: nowrap; margin-top: 2px; height: 23px; margin-left: 5px; font-size: 95%; display: inline-flex; align-items: center; background-color: var(--yt-spec-button-chip-background-hover); animation: 1s show ease} @keyframes show { from { opacity: 0; } to { opacity: 1; } }', 'dateVideoStyle')
+					if (style2) {
+						pushCSS('.video-date {background-color: var(--yt-spec-base-background); filter: drop-shadow(0 0 1px rgb(201 208 211))}', 'dateVideoStyle2')
 					}
-					metadataElement.appendChild(label)
 				}
+				el.appendChild(label)
 			})
 		}).catch()
 	}
@@ -988,13 +984,15 @@
 	}
 
 	function RemoveNotificationNumber() {
-		try {
-			new MutationObserver((e) => {
-				if (e[0].addedNodes[0].data != e[0].removedNodes[0].data) {
-					document.title = document.title.replace(/^(\(\d*\))\s*/, "");
-				}
-			}).observe(document.querySelector("title"), { childList: true, characterDataOldValue: true });
-		} catch { }
+		waitSelector('title').then(() => {
+			try {
+				new MutationObserver((e) => {
+					if (e[0].addedNodes[0].data != e[0].removedNodes[0].data) {
+						document.title = document.title.replace(/^(\(\d*\))\s*/, "");
+					}
+				}).observe(document.querySelector("title"), { childList: true, characterDataOldValue: true });
+			} catch { }
+		})
 	}
 
 	function CustomIcon(custom, color) {
@@ -1143,11 +1141,11 @@
 	}
 
 	function RememberTime() {
-		if (!navigator.cookieEnabled && currentPage() == 'embed')
-			return
+		if (!navigator.cookieEnabled && currentPage() == 'embed') return;
 
-		const getCacheName = () => 'retube-resume-playback-time:' + getVideoId()
+		const getCacheName = () => `retube-resume-playback-time:${getVideoId()}`
 		let cacheName
+
 		waitSelector('video').then(video => {
 			cacheName = getCacheName()
 			resumePlayback.apply(video)
@@ -1156,12 +1154,13 @@
 			video.addEventListener('ended', () => sessionStorage.removeItem(cacheName))
 		})
 		function savePlayback() {
-			if (this.currentTime > 5 && this.duration > 30 && !document.querySelector('#movie_player').classList.contains('ad-showing')) {
-				sessionStorage.setItem(cacheName, ~~this.currentTime)
-			}
+			const moviePlayer = document.querySelector('#movie_player');
+			if (!moviePlayer || moviePlayer.classList.contains('ad-showing') || this.duration < 30) return;
+
+			this.currentTime > 15 ? sessionStorage.setItem(cacheName, ~~this.currentTime) : sessionStorage.removeItem(cacheName);
 		}
 		async function resumePlayback() {
-			if (new URLSearchParams(location.search).has('t')) return
+			if (new URLSearchParams(location.search).has('t')) return;
 
 			cacheName = getCacheName()
 			if ((time = +sessionStorage.getItem(cacheName)) && (time < (this.duration - 1))) {
@@ -1331,7 +1330,7 @@
 	function HotkeysAlwaysActive() {
 		let cachedMode = "";
 		document.addEventListener("keydown", function onEvent(e) {
-			if (e.code !== "Space") return;
+			if (currentPage() != 'watch' || e.code !== "Space" || document.querySelector('.CodeMirror-focused')) return;
 
 			let ae = document.activeElement;
 			if (ae.tagName.toLowerCase() == "input" || ae.hasAttribute("contenteditable")) return;
@@ -1354,7 +1353,7 @@
 		document.addEventListener('keyup', e => currentPage() == 'watch' && setFocus(e.target))
 		document.addEventListener('click', e => currentPage() == 'watch' && e.isTrusted && setFocus(e.target))
 		function setFocus(target) {
-			if (['input', 'textarea', 'select'].includes(target.localName) || target.isContentEditable) return;
+			if (['input', 'textarea', 'select'].includes(target.localName) || target.isContentEditable || (target.classList.length > 0 && target.classList[0]?.includes('CodeMirror'))) return;
 			movie_player.focus({ preventScroll: true })
 		}
 	}
