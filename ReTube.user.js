@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ReTube
 // @namespace    http://tampermonkey.net/
-// @version      4.2.3
+// @version      4.2.4
 // @description ReTube
 // @author       Eject
 // @match        *://www.youtube.com/*
@@ -1236,26 +1236,31 @@
 	}
 
 	function FixChannelLinks() {
-		document.addEventListener('mouseover', ({ target }) => {
-			if (!target.matches('.ytd-channel-name')) return;
-			if ((link = target.closest('a'))
-				&& target.__data?.text?.runs?.length
-				&& target.__data?.text?.runs[0].navigationEndpoint?.commandMetadata?.webCommandMetadata?.webPageType == 'WEB_PAGE_TYPE_CHANNEL'
-			) {
-				const urlOrig = link.href
-				const url = target.__data.text.runs[0].navigationEndpoint.commandMetadata.webCommandMetadata.url + '/videos'
-				link.href = url
-				link.data.commandMetadata.webCommandMetadata.url = url
-				link.data.commandMetadata.webCommandMetadata.webPageType = 'WEB_PAGE_TYPE_CHANNEL'
-				link.data.browseEndpoint = target.__data.text.runs[0].navigationEndpoint.browseEndpoint
-				link.data.browseEndpoint.params = encodeURIComponent(btoa(String.fromCharCode(0x12, 0x06) + 'videos'))
-				target.addEventListener('mouseout', () => {
-					link.href = urlOrig
-					link.data.commandMetadata.webCommandMetadata.url = urlOrig
-					link.data.commandMetadata.webCommandMetadata.webPageType = 'WEB_PAGE_TYPE_WATCH'
-				}, { capture: true, once: true })
+		document.addEventListener('click', evt => patchLink(evt), { capture: true });
+		document.addEventListener('auxclick', evt => evt.button === 1 && patchLink(evt), { capture: true }); // mouse middle click
+
+		function patchLink(evt) {
+			if (evt.isTrusted && currentPage() == "watch" && evt.target.closest('#channel-name') && (link = evt.target.closest('a'))) {
+				if ((data = evt.target.closest('ytd-compact-video-renderer, ytd-video-meta-block')?.data) && (res = SearchInObjectByKey({
+					'obj': data,
+					'keys': 'navigationEndpoint',
+					'match_fn': val => {
+						return val?.commandMetadata?.webCommandMetadata?.webPageType == 'WEB_PAGE_TYPE_CHANNEL';
+					},
+				})?.data)
+				) {
+					const urlOrigData = link.data, urlOrig = link.href;
+
+					link.data = res;
+					link.href = link.data.commandMetadata.webCommandMetadata.url += '/videos';
+
+					evt.target.addEventListener('mouseout', () => {
+						link.data = urlOrigData;
+						link.href = urlOrig;
+					}, { capture: true, once: true });
+				}
 			}
-		})
+		}
 	}
 
 	function ShowTranslationTime() {
@@ -1818,6 +1823,86 @@
 	}
 	async function getSavedSetting(key) {
 		return await GM_getValue(key) == 'true';
+	}
+	function SearchInObjectByKey({ obj, keys, match_fn = data => data.constructor.name !== 'Object', multiple = false, path = '' }) {
+		if (typeof obj !== 'object') {
+			console.error('searchInObjectByKey > keys is not Object:', ...arguments);
+			return;
+		}
+
+		const setPath = d => (path ? path + '.' : '') + d;
+		let hasKey, results = [];
+
+		for (const prop in obj) {
+			if (obj.hasOwnProperty(prop) && obj[prop]) {
+				hasKey = keys.constructor.name === 'String' ? (keys === prop) : keys.indexOf(prop) > -1;
+
+				if (hasKey && (!match_fn || match_fn(obj[prop]))) {
+					if (multiple) {
+						results.push({
+							'path': setPath(prop),
+							'data': obj[prop],
+						});
+					} else {
+						return {
+							'path': setPath(prop),
+							'data': obj[prop],
+						};
+					}
+				} else {
+					switch (obj[prop].constructor.name) {
+						case 'Object':
+							const resultObject = SearchInObjectByKey({
+								obj: obj[prop],
+								keys: keys,
+								path: setPath(prop),
+								match_fn: match_fn,
+							});
+							if (resultObject) {
+								if (multiple) results.push(resultObject);
+								else return resultObject;
+							}
+							break;
+
+						case 'Array':
+							for (let i = 0; i < obj[prop].length; i++) {
+								const resultArray = SearchInObjectByKey({
+									obj: obj[prop][i],
+									keys: keys,
+									path: path + `[${i}]`,
+									match_fn: match_fn,
+								});
+								if (resultArray) {
+									if (multiple) results.push(resultArray);
+									else return resultArray;
+								}
+							}
+							break;
+
+						case 'Function':
+							if (Object.keys(obj[prop]).length) {
+								for (const j in obj[prop]) {
+									if (typeof obj[prop][j] !== 'undefined') {
+										const resultFunction = SearchInObjectByKey({
+											obj: obj[prop][j],
+											keys: keys,
+											path: setPath(prop) + '.' + j,
+											match_fn: match_fn,
+										});
+										if (resultFunction) {
+											if (multiple) results.push(resultFunction);
+											else return resultFunction;
+										}
+									}
+								}
+							}
+							break;
+					}
+				}
+			}
+		}
+
+		if (multiple) return results;
 	}
 	//#endregion
 })()
