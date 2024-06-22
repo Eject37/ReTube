@@ -1,14 +1,12 @@
 // ==UserScript==
 // @name         ReTube
 // @namespace    http://tampermonkey.net/
-// @version      4.2.5
+// @version      4.2.6
 // @description ReTube
 // @author       Eject
 // @match        *://www.youtube.com/*
 // @match        *://music.youtube.com/*
 // @icon          https://github.com/Eject37/ReTube/raw/main/yt-favicon2.ico
-// @updateURL  https://github.com/Eject37/ReTube/raw/main/ReTube.user.js
-// @downloadURL  https://github.com/Eject37/ReTube/raw/main/ReTube.user.js
 // @grant GM_getValue
 // @grant GM_setValue
 // @grant GM_listValues
@@ -117,13 +115,13 @@
 		if (RTwatchedVideo && !window.location.href.includes('feed/history')) MarkWatchedVideos(true)
 		if (RTreturnDislikes) ReturnDislikes()
 
-		await new Promise(resolve => setTimeout(resolve, 3000))
+		await Delay(3000)
 		document.querySelector('#rtAnim')?.remove()
 
 		if (RTUpdateCheck) {
 			if (currentPage() == 'embed') return;
 
-			await new Promise(resolve => setTimeout(resolve, 5000))
+			await Delay(5000)
 			fetch('https://api.github.com/repos/Eject37/ReTube/releases/latest').then(response => response.json()).then(data => {
 				const localVersion = GM_info.script.version;
 				const onlineVersion = data.tag_name.replace('v', '');
@@ -734,6 +732,7 @@
 			'::-webkit-scrollbar {width: 9px; height: 9px; background-color: var(--YT-main-color);}' + // Скроллбар
 			'.yt-spec-button-shape-next--mono.yt-spec-button-shape-next--tonal {color: var(--YT-text-color)}' + // Цвет текста кнопок (лайк, дизлайк, сохранить)
 			'#cinematics-container {display: none}' + // Отключаем профессиональное освещение
+			'#button.ytd-topbar-menu-button-renderer {color: #fff !important}' + // Цвет иконки 'Создать видео'
 
 			// Красим всплывающую подсказку слева снизу (например при добавлении видео в смотреть позже)
 			'yt-notification-action-renderer[darker-dark-theme] tp-yt-paper-toast.yt-notification-action-renderer {background-color: var(--YT-additional-color); box-shadow: 0 0 10px var(--YT-additional-color)}' +
@@ -861,7 +860,8 @@
 			'tp-yt-paper-button, #index.ytd-playlist-video-renderer, .yt-lockup-metadata-view-model-wiz--compact .yt-lockup-metadata-view-model-wiz__title, ' +
 			'.yt-content-metadata-view-model-wiz__metadata-text, .yt-list-item-view-model-wiz__container--compact .yt-list-item-view-model-wiz__title-wrapper, ' +
 			'#channel-handle.ytd-active-account-header-renderer, ytd-active-account-header-renderer[enable-handles-account-menu-switcher] #account-name.ytd-active-account-header-renderer, ' +
-			'.yt-video-attribute-view-model__subtitle, .yt-video-attribute-view-model__secondary-subtitle {font-family: Ubuntu !important;}' +
+			'.yt-video-attribute-view-model__subtitle, .yt-video-attribute-view-model__secondary-subtitle, .title.reel-player-header-renderer, .ytStorybookReelMultiFromatLinkViewModelLink, ' +
+			'ytd-video-meta-block:not([rich-meta]) #byline-container.ytd-video-meta-block {font-family: Ubuntu !important;}' +
 
 			'div.style-scope.ytd-rich-grid-row {font-weight: 400 !important;}' +
 
@@ -901,7 +901,7 @@
 			'#guide-section-title.ytd-guide-section-renderer, .title.ytd-mini-guide-entry-renderer, .ytp-tooltip, .tp-yt-paper-tooltip[style-target=tooltip], ' +
 			'#message.yt-live-chat-viewer-engagement-message-renderer, html, .animated-rolling-number-wiz, #video-title.ytd-reel-item-renderer, .html5-video-player, tp-yt-paper-toast.yt-notification-action-renderer, ' +
 			'.truncated-text-wiz--medium-text .truncated-text-wiz__absolute-button, yt-formatted-string.ytd-menu-service-item-download-renderer, ' +
-			'.more-button.ytd-comment-view-model, .less-button.ytd-comment-view-model, .YtChipShapeChip {font-family: "Ubuntu Light Custom" !important}' +
+			'.more-button.ytd-comment-view-model, .less-button.ytd-comment-view-model, .YtChipShapeChip, ytd-thumbnail-overlay-bottom-panel-renderer {font-family: "Ubuntu Light Custom" !important}' +
 
 			'ytd-watch-metadata[title-headline-xs] h1.ytd-watch-metadata {font-family: "YouTube Sans"; font-weight: 600}'
 			, 'rt-betterFontStyle')
@@ -985,7 +985,7 @@
 			isScrolling = false
 
 			while (document.documentElement.scrollTop != 0) {
-				await new Promise(resolve => setTimeout(resolve, 25))
+				await Delay(25)
 			}
 			document.querySelector(playerSelector).focus()
 			document.removeEventListener('wheel', WheelFix)
@@ -1016,24 +1016,15 @@
 	function ReturnDislikes() {
 		const CACHE_PREFIX = 'retube-dislikes-count:', SELECTOR_ID = 'retube-dislikes-count'
 
-		runOnPageLoad(async () => {
+		runOnPageInitOrTransition(async () => {
 			if (currentPage() != 'watch') return;
-			document.addEventListener('yt-action', dislikeIsUpdated);
-		});
+			await Delay(1000);
+			waitSelector('#actions dislike-button-view-model button', { stop_on_page_change: true }).then(el => setDislikeCount(el));
+		})
 
-		function dislikeIsUpdated(evt) {
-			if (currentPage() != 'watch') return;
-
-			switch (evt.detail?.actionName) {
-				case 'yt-reload-continuation-items-command':
-					document.removeEventListener('yt-action', dislikeIsUpdated); // stop listener
-					waitSelector('#actions dislike-button-view-model button', { stop_on_page_change: true }).then(el => setDislikeCount(el));
-					break;
-			}
-		}
-
-		async function setDislikeCount(container = required()) {
+		async function setDislikeCount(container) {
 			const videoId = getVideoId();
+			let dislikeCount = 0;
 			if (!videoId) return console.error('return-dislike videoId: empty', videoId);
 
 			container.style.width = 'auto'; // fix width
@@ -1045,8 +1036,16 @@
 				insertToHTML({ 'data': data, 'container': container });
 			}
 
+			//['click', 'mousedown', 'mouseup', 'mouseleave', 'focusout'].forEach(evt => {
+			document.querySelectorAll('#actions dislike-button-view-model button, #actions like-button-view-model button').forEach(button => {
+				button.addEventListener('focusout', async () => {
+					await Delay(500);
+					insertToHTML({ 'data': { dislikes: dislikeCount }, 'container': container });
+				});
+			})
+			//});
+
 			async function getDislikeCount() {
-				const videoId = getVideoId();
 				const fetchAPI = () => fetch(`https://returnyoutubedislikeapi.com/votes?videoId=${videoId}`,
 					{
 						method: 'GET',
@@ -1060,18 +1059,20 @@
 				}
 			}
 
-			function insertToHTML({ data = required(), container = required() }) {
+			async function insertToHTML({ data = required(), container = required() }) {
 				if (!(container instanceof HTMLElement)) return console.error('container not HTMLElement:', container);
-				const text = data.dislikes;
+
+				const dislikeCountMath = container.getAttribute("aria-pressed") == 'true' ? data.dislikes + 1 : data.dislikes; // Если стоит дизлайк то +1
+				dislikeCount = data.dislikes;
 
 				try {
 					(document.getElementById(SELECTOR_ID) || (function () {
 						container.insertAdjacentHTML('beforeend',
-							`<span id="${SELECTOR_ID}" style="text-overflow:ellipsis; overflow:visible; white-space:nowrap; padding-left:3px;">${text}</span>`);
+							`<span id="${SELECTOR_ID}" style="text-overflow:ellipsis; overflow:visible; white-space:nowrap; padding-left:3px;">${dislikeCountMath}</span>`);
 						return document.getElementById(SELECTOR_ID);
 					})())
-						.textContent = text;
-					container.title = text;
+						.textContent = dislikeCountMath;
+					container.title = dislikeCountMath;
 				}
 				catch { }
 			}
@@ -1311,7 +1312,7 @@
 
 		async function setVideoCount(container) {
 			document.querySelector('#rt-videoCount')?.remove()
-			await new Promise(resolve => setTimeout(resolve, 500))
+			await Delay(3000)
 			const channelId = getChannelId()
 			if (!channelId) return console.error('setVideoCount channelId: empty', channelId);
 			if (storage = sessionStorage.getItem(CACHE_PREFIX + channelId)) {
@@ -1782,18 +1783,6 @@
 	function finishEvent(callback) {
 		document.addEventListener('yt-navigate-finish', () => callback())
 	}
-	function runOnPageLoad(callback) {
-		if (!callback || typeof callback !== 'function') {
-			return console.error('runOnPageLoad > callback not function:', ...arguments);
-		}
-		let prevURL = document.URL;
-		const isURLChange = () => (prevURL === document.URL) ? false : prevURL = document.URL;
-		// init
-		isURLChange() || callback();
-		// update
-		// window.addEventListener('transitionend', () => isURLChange() && callback());
-		document.addEventListener('yt-navigate-finish', () => isURLChange() && callback());
-	}
 	function showOSD(text) {
 		if (!text || (currentPage() != 'embed' && currentPage() != 'watch')) return;
 		if (typeof this.fadeBezel === 'number') clearTimeout(this.fadeBezel); // reset fade
@@ -1910,6 +1899,9 @@
 		}
 
 		if (multiple) return results;
+	}
+	async function Delay(ms = 1000) {
+		return new Promise(resolve => setTimeout(resolve, ms))
 	}
 	//#endregion
 })()
