@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ReTube
 // @namespace    http://tampermonkey.net/
-// @version      4.2.6
+// @version      4.2.7
 // @description ReTube
 // @author       Eject
 // @match        *://www.youtube.com/*
@@ -90,8 +90,9 @@
 	if (document.readyState !== 'loading') ReTube(); else document.addEventListener('DOMContentLoaded', ReTube)
 
 	async function ReTube() {
-		if (!RTfirstLaunch) {
-			alert('ReTube.\nЧто-бы открыть меню настроек, нажмите F2 находясь на сайте ютуба.')
+		if (!RTfirstLaunch && currentPage() != 'embed') {
+			await Delay(1500)
+			alert('ReTube.\nЧтобы открыть меню настроек, нажмите F2, находясь на сайте ютуба.')
 			GM_setValue('rt-firstLaunch', 'yes')
 		}
 
@@ -118,10 +119,9 @@
 		await Delay(3000)
 		document.querySelector('#rtAnim')?.remove()
 
-		if (RTUpdateCheck) {
-			if (currentPage() == 'embed') return;
-
+		if (RTUpdateCheck && currentPage() != 'embed') {
 			await Delay(5000)
+
 			fetch('https://api.github.com/repos/Eject37/ReTube/releases/latest').then(response => response.json()).then(data => {
 				const localVersion = GM_info.script.version;
 				const onlineVersion = data.tag_name.replace('v', '');
@@ -137,7 +137,7 @@
 	}
 
 	document.addEventListener('keyup', function (e) {
-		if (e.key == 'F2') {
+		if (e.key == 'F2' && currentPage() != 'embed') {
 			const retubeMenuStyle = document.querySelector('#retube-menu-style')
 			if (retubeMenuStyle) {
 				document.querySelector('#retube-menu')?.toggleAttribute('hidden')
@@ -161,7 +161,7 @@
 				'.img-tab-icon {width: 30px; pointer-events: none}' +
 				'.fade-in {opacity: 1; transition: opacity 0.3s ease} .fade-out {opacity: 0; max-height: 0; pointer-events: none}' +
 				'.rt-title {margin-left: 4px; font-size: 22px; font-weight: bold}' +
-				'.rt-select {border-color: rgb(72 75 91); border-radius: 10px; color: rgb(201 208 211); background: rgb(96 100 110 / 37%); height: 27px; margin-left: 3px;} .rt-select:focus {outline: none}' +
+				'.rt-select {border-color: rgb(72 75 91); border-radius: 10px; color: rgb(201 208 211); background: rgb(96 100 110 / 37%); height: 18px; margin-left: 3px;} .rt-select:focus {outline: none}' +
 				'option {border-color: rgb(72 75 91); border-radius: 10px; background: rgb(96 100 110)}' +
 				'.rt-label-head {font-weight: bold; margin-left: 6px; font-size: 20px; pointer-events: none} #rt-head {background: linear-gradient(rgb(67 77 105 / 37%), transparent); border-radius: 20px; display: flex; justify-content: space-between}' +
 				'#rt-close-head {margin-left: auto}' +
