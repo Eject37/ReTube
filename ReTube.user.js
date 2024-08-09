@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ReTube
 // @namespace    http://tampermonkey.net/
-// @version      4.2.7
+// @version      4.3.0
 // @description ReTube
 // @author       Eject
 // @match        *://www.youtube.com/*
@@ -70,6 +70,9 @@
 	const api = 'AIzaSyBYoUuFiFjwRsvqPEbEIdGngobbeL9xs9o'
 	let playerHoverHandler, isScrolling = false, wheel = false
 	//#endregion
+
+	// Обходим внедрение HTML кода
+	trustedTypes.createPolicy('default', { createHTML: (input) => input });
 
 	if (RTanimateLoad) {
 		waitSelector('head').then(() => {
@@ -170,6 +173,7 @@
 			//#endregion
 
 			//#region Основа меню
+
 			document.querySelector('body').insertAdjacentHTML('beforeend', '<div id="retube-menu"></div>')
 			document.querySelector('#retube-menu').insertAdjacentHTML('beforeend', '<div id="rt-head"><span class="retube-label rt-label-head">ReTube</span><span id="rt-close-head"><img src="https://i.imgur.com/ibUUDqp.png" style="width: 21px; margin-right: 4px" id="rt-closeImg-head" /></span></div>')
 			document.querySelector('#retube-menu').insertAdjacentHTML('beforeend', '<div id="rt-tabs"><button class="rt-button-tab" data-tab="1"><img src="https://i.imgur.com/UW7uxaH.png" class="img-tab-icon" style="width: 27px; height: 27px;" /><span class="rt-label-tabs">Главная</span></button><button class="rt-button-tab" data-tab="2"><img src="https://i.imgur.com/PQ9b4Ke.png" class="img-tab-icon" /><span class="rt-label-tabs">Цвета</span></button><button class="rt-button-tab" data-tab="3"><img src="https://i.imgur.com/fKkwgP1.png" class="img-tab-icon" /><span class="rt-label-tabs">Инфо</span></button></div>')
@@ -675,7 +679,7 @@
 			'html[dark], [dark] {--yt-spec-raised-background: var(--YT-overlayMenu-color)}' + // Цвет элементов при поиске видео + цвет фона добавления в плейлист
 			'html[dark], [dark] {--yt-spec-brand-background-primary: var(--YT-additional-color); --yt-spec-general-background-a: var(--YT-main-color)}' + // Задние цвета активного плейлиста
 			'html[dark], [dark] {--yt-spec-badge-chip-background: var(--YT-additional-color); --yt-spec-button-chip-background-hover: var(--YT-hover-and-dateVideoLoad-color)}' + // Цвет фона описания видео
-			'.yt-spec-button-shape-next--mono.yt-spec-button-shape-next--tonal:hover {background-color: var(--YT-hoverVideoButton-color)}' + // Цвет фона лайков и прочих кнопок при наведении
+			'.yt-spec-button-shape-next--mono.yt-spec-button-shape-next--tonal:hover, .yt-spec-button-shape-next--mono.yt-spec-button-shape-next--filled:hover {background-color: var(--YT-hoverVideoButton-color)}' + // Цвет фона лайков и прочих кнопок при наведении
 			'ytd-playlist-panel-renderer[use-color-palette][is-dark-theme] {--yt-active-playlist-panel-background-color: var(--YT-hover-and-dateVideoLoad-color)}' + // Цвет фона текущего видео в плейлисте
 			'html[dark], [dark] {--yt-spec-call-to-action: var(--YT-link-color); --yt-spec-themed-blue: var(--YT-link-color)} .yt-core-attributed-string__link--call-to-action-color {color: var(--yt-spec-call-to-action) !important} .yt-spec-button-shape-next--call-to-action.yt-spec-button-shape-next--text {color: var(--yt-spec-call-to-action)} .yt-spec-button-shape-next--call-to-action.yt-spec-button-shape-next--text:hover {background-color: var(--YT-additional-color)}' + // Цвет ссылок
 			'html[dark], [dark] {--ytd-searchbox-background: var(--YT-main-color)}' + // Задний цвет окна поиска
@@ -727,10 +731,10 @@
 			'span.yt-core-attributed-string--link-inherit-color { color: var(--YT-text-color) !important }' + // Цвет текста описания видео
 			'.ytp-tooltip.ytp-preview .ytp-tooltip-text, .ytp-tooltip-text, .tp-yt-paper-tooltip[style-target=tooltip] { border-radius: 12px !important }' + // Закругление всплывающих подсказок
 			'html[dark], [dark] { --yt-spec-static-brand-white: var(--YT-text-color) }' +  // Цвет текста в чате на стриме
-			'.yt-spec-button-shape-next--mono.yt-spec-button-shape-next--tonal { background-color: var(--YT-additional-color) }' + // Цвет фона лайков и прочих кнопок
+			'.yt-spec-button-shape-next--mono.yt-spec-button-shape-next--tonal, .yt-spec-button-shape-next--mono.yt-spec-button-shape-next--filled { background-color: var(--YT-additional-color) }' + // Цвет фона лайков и прочих кнопок
 			'html[dark] ::selection { background: var(--YT-hoverAndPanels2-color) !important; }' + // Цвет выделения текста
 			'::-webkit-scrollbar {width: 9px; height: 9px; background-color: var(--YT-main-color);}' + // Скроллбар
-			'.yt-spec-button-shape-next--mono.yt-spec-button-shape-next--tonal {color: var(--YT-text-color)}' + // Цвет текста кнопок (лайк, дизлайк, сохранить)
+			'.yt-spec-button-shape-next--mono.yt-spec-button-shape-next--tonal, .yt-spec-button-shape-next--mono.yt-spec-button-shape-next--filled {color: var(--YT-text-color)}' + // Цвет текста кнопок (лайк, дизлайк, сохранить)
 			'#cinematics-container {display: none}' + // Отключаем профессиональное освещение
 			'#button.ytd-topbar-menu-button-renderer {color: #fff !important}' + // Цвет иконки 'Создать видео'
 
