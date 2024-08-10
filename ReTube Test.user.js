@@ -72,7 +72,8 @@
 	//#endregion
 
 	// Обходим внедрение HTML кода
-	if (window.trustedTypes) trustedTypes.createPolicy('default', { createHTML: (input) => input });
+	try { document.head.insertAdjacentHTML('beforeend', '<trusted-test></trusted-test>') }
+	catch { trustedTypes.createPolicy('default', { createHTML: (input) => input }); }
 
 	if (RTanimateLoad) {
 		waitSelector('head').then(() => {
