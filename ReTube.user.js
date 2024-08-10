@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ReTube
 // @namespace    http://tampermonkey.net/
-// @version      4.3.0
+// @version      4.3.1
 // @description ReTube
 // @author       Eject
 // @match        *://www.youtube.com/*
@@ -72,7 +72,8 @@
 	//#endregion
 
 	// Обходим внедрение HTML кода
-	trustedTypes.createPolicy('default', { createHTML: (input) => input });
+	try { document.head.insertAdjacentHTML('beforeend', '<trusted-test></trusted-test>') }
+	catch { trustedTypes.createPolicy('default', { createHTML: (input) => input }); }
 
 	if (RTanimateLoad) {
 		waitSelector('head').then(() => {
@@ -699,7 +700,7 @@
 			'svg.external-icon > svg > g > path:nth-child(1), #card svg g g path:nth-child(1) {fill: var(--YT-icon-color)}' + // Иконка ютуба
 			'#logo-icon > svg > g > g:nth-child(1) > path:nth-child(1) {fill: var(--YT-icon-color)}' + // Иконка ютуба (старый дизайн)
 			'.html5-video-player {background: var(--YT-player-color)}' + // Цвет фона плеера
-			'#time-status.ytd-thumbnail-overlay-time-status-renderer, .badge-shape-wiz--default.badge-shape-wiz--overlay {background: var(--YT-videoTime-color); backdrop-filter: blur(10px)}' + // Фон рамки с длительносьтю видео
+			'#time-status.ytd-thumbnail-overlay-time-status-renderer, .badge-shape-wiz--default.badge-shape-wiz--overlay, .badge-shape-wiz--thumbnail-default {background: var(--YT-videoTime-color); backdrop-filter: blur(10px)}' + // Фон рамки с длительносьтю видео
 			'.badge-shape-wiz--live.badge-shape-wiz--overlay {background: var(--YT-HD4KBadge-color); backdrop-filter: blur(10px)}' + // Фон рамки 'В эфире'
 			'.yt-spec-icon-badge-shape--type-notification .yt-spec-icon-badge-shape__badge {background-color: var(--YT-notificationsBadge-color)}' + // Цвет бэйджа количества уведомлений
 			'sup.ytp-swatch-color-white {color: var(--YT-link-color)}' + // Цвет надписей HD в выборе качества
