@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ReTube
-// @namespace    http://tampermonkey.net/
-// @version      4.3.1
+// @namespace 	http://tampermonkey.net/
+// @version      4.3.2
 // @description ReTube
 // @author       Eject
 // @match        *://www.youtube.com/*
@@ -67,7 +67,7 @@
 	let RTUpdateCheck = await getSavedSetting('rt-updateCheck') ? true : await GM_getValue('rt-updateCheck') === undefined
 	//#endregion
 	//#region Переменные
-	const api = 'AIzaSyBYoUuFiFjwRsvqPEbEIdGngobbeL9xs9o'
+	const api = 'AIzaSyBYoUuFiFjwRsvqPEbEIdGngobbeL9xs9o', userLanguage = GetUserLanguage()
 	let playerHoverHandler, isScrolling = false, wheel = false
 	//#endregion
 
@@ -795,7 +795,8 @@
 
 		// Скрываем кнопки под видео
 		pushCSS('ytd-download-button-renderer, yt-button-view-model:has(button[aria-label="Поделиться"]), yt-button-view-model:has(button[aria-label="Создать клип"]), yt-button-view-model:has(button[aria-label="Спасибо"]), yt-button-view-model:has(button[aria-label="Показать текст видео"]), ' +
-			'yt-button-view-model:has(button[aria-label="Поділитися"]), yt-button-view-model:has(button[aria-label="Створити кліп"]), yt-button-view-model:has(button[aria-label="Дякую"]), yt-button-view-model:has(button[aria-label="Показати текстову версію"])' +
+			'yt-button-view-model:has(button[aria-label="Поділитися"]), yt-button-view-model:has(button[aria-label="Створити кліп"]), yt-button-view-model:has(button[aria-label="Дякую"]), yt-button-view-model:has(button[aria-label="Показати текстову версію"]), ' +
+			'yt-button-view-model:has(button[aria-label="Share"]), yt-button-view-model:has(button[aria-label="Clip"]), yt-button-view-model:has(button[aria-label="Thank You"]), yt-button-view-model:has(button[aria-label="Show text version"])' +
 			'{display: none}', 'rt-hideTrashStyle')
 
 		// Выключаем и скрываем Профессиональное освещение (если включена покраска ютуба) в настройках видео
@@ -906,7 +907,8 @@
 			'#guide-section-title.ytd-guide-section-renderer, .title.ytd-mini-guide-entry-renderer, .ytp-tooltip, .tp-yt-paper-tooltip[style-target=tooltip], ' +
 			'#message.yt-live-chat-viewer-engagement-message-renderer, html, .animated-rolling-number-wiz, #video-title.ytd-reel-item-renderer, .html5-video-player, tp-yt-paper-toast.yt-notification-action-renderer, ' +
 			'.truncated-text-wiz--medium-text .truncated-text-wiz__absolute-button, yt-formatted-string.ytd-menu-service-item-download-renderer, ' +
-			'.more-button.ytd-comment-view-model, .less-button.ytd-comment-view-model, .YtChipShapeChip, ytd-thumbnail-overlay-bottom-panel-renderer {font-family: "Ubuntu Light Custom" !important}' +
+			'.more-button.ytd-comment-view-model, .less-button.ytd-comment-view-model, .YtChipShapeChip, ytd-thumbnail-overlay-bottom-panel-renderer, ' +
+			'ytd-thumbnail-overlay-toggle-button-renderer[use-expandable-tooltip] #label.ytd-thumbnail-overlay-toggle-button-renderer {font-family: "Ubuntu Light Custom" !important}' +
 
 			'ytd-watch-metadata[title-headline-xs] h1.ytd-watch-metadata {font-family: "YouTube Sans"; font-weight: 600}'
 			, 'rt-betterFontStyle')
@@ -1019,68 +1021,75 @@
 	}
 
 	function ReturnDislikes() {
-		const CACHE_PREFIX = 'retube-dislikes-count:', SELECTOR_ID = 'retube-dislikes-count'
+		const CACHE_PREFIX = 'retube-dislikes-count:', SELECTOR_ID = 'retube-dislikes-count';
 
 		runOnPageInitOrTransition(async () => {
-			if (currentPage() != 'watch') return;
+			if (currentPage() !== 'watch') return;
 			await Delay(1000);
-			waitSelector('#actions dislike-button-view-model button', { stop_on_page_change: true }).then(el => setDislikeCount(el));
-		})
+			waitSelector('#actions dislike-button-view-model button', { stop_on_page_change: true }).then(setDislikeCount);
+		});
 
 		async function setDislikeCount(container) {
 			const videoId = getVideoId();
-			let dislikeCount = 0;
 			if (!videoId) return console.error('return-dislike videoId: empty', videoId);
 
 			container.style.width = 'auto'; // fix width
 
-			if (storage = sessionStorage.getItem(CACHE_PREFIX + videoId)) { // has in cache
-				insertToHTML({ 'data': JSON.parse(storage), 'container': container });
-			}
-			else if (data = await getDislikeCount()) {
-				insertToHTML({ 'data': data, 'container': container });
+			let dislikeData = sessionStorage.getItem(CACHE_PREFIX + videoId);
+			if (dislikeData) {
+				dislikeData = JSON.parse(dislikeData);
+			} else {
+				dislikeData = await getDislikeCount(videoId);
+				if (dislikeData) {
+					sessionStorage.setItem(CACHE_PREFIX + videoId, JSON.stringify(dislikeData));
+				}
 			}
 
-			//['click', 'mousedown', 'mouseup', 'mouseleave', 'focusout'].forEach(evt => {
-			document.querySelectorAll('#actions dislike-button-view-model button, #actions like-button-view-model button').forEach(button => {
-				button.addEventListener('focusout', async () => {
-					await Delay(500);
-					insertToHTML({ 'data': { dislikes: dislikeCount }, 'container': container });
+			if (dislikeData) {
+				insertToHTML(dislikeData, container);
+			}
+
+			document.querySelectorAll('#actions dislike-button-view-model button, #actions like-button-view-model button')
+				.forEach(button => {
+					button.addEventListener('focusout', async () => {
+						await Delay(500);
+						insertToHTML({ dislikes: dislikeData.dislikes }, container);
+					});
 				});
-			})
-			//});
+		}
 
-			async function getDislikeCount() {
-				const fetchAPI = () => fetch(`https://returnyoutubedislikeapi.com/votes?videoId=${videoId}`,
-					{
-						method: 'GET',
-						headers: { 'Content-Type': 'application/json' },
-					}
-				).then(response => response.json()).then(json => json.dislikes && ({ 'likes': json.likes, 'dislikes': json.dislikes })).catch();
+		async function getDislikeCount(videoId) {
+			try {
+				const response = await fetch(`https://returnyoutubedislikeapi.com/votes?videoId=${videoId}`);
+				const json = await response.json();
+				return json.dislikes ? { likes: json.likes, dislikes: json.dislikes } : null;
+			} catch (error) {
+				console.error('Error fetching dislike count:', error);
+				return null;
+			}
+		}
 
-				if (result = await fetchAPI()) {
-					sessionStorage.setItem(CACHE_PREFIX + videoId, JSON.stringify(result));
-					return result;
-				}
+		function insertToHTML(data, container) {
+			if (!(container instanceof HTMLElement)) return console.error('container not HTMLElement:', container);
+
+			const dislikeCount = container.getAttribute("aria-pressed") === 'true' ? data.dislikes + 1 : data.dislikes;
+			const dislikeText = FormatDislikeCount(dislikeCount);
+
+			let countElement = document.getElementById(SELECTOR_ID);
+			if (!countElement) {
+				container.insertAdjacentHTML('beforeend', `<span id="${SELECTOR_ID}" style="text-overflow:ellipsis; overflow:visible; white-space:nowrap; padding-left:3px;">${dislikeText}</span>`);
+				countElement = document.getElementById(SELECTOR_ID);
 			}
 
-			async function insertToHTML({ data = required(), container = required() }) {
-				if (!(container instanceof HTMLElement)) return console.error('container not HTMLElement:', container);
+			countElement.textContent = dislikeText;
+			container.title = dislikeText;
+		}
 
-				const dislikeCountMath = container.getAttribute("aria-pressed") == 'true' ? data.dislikes + 1 : data.dislikes; // Если стоит дизлайк то +1
-				dislikeCount = data.dislikes;
-
-				try {
-					(document.getElementById(SELECTOR_ID) || (function () {
-						container.insertAdjacentHTML('beforeend',
-							`<span id="${SELECTOR_ID}" style="text-overflow:ellipsis; overflow:visible; white-space:nowrap; padding-left:3px;">${dislikeCountMath}</span>`);
-						return document.getElementById(SELECTOR_ID);
-					})())
-						.textContent = dislikeCountMath;
-					container.title = dislikeCountMath;
-				}
-				catch { }
-			}
+		function FormatDislikeCount(count) {
+			return Intl.NumberFormat(userLanguage, {
+				notation: "compact",
+				compactDisplay: "short",
+			}).format(roundDown(count));
 		}
 	}
 
@@ -1465,87 +1474,77 @@
 	}
 
 	function TranslateCommentButton() {
-		function ReplaceNode(a, b) {
-			a.parentNode.appendChild(b)
-			a.parentNode.removeChild(a)
-		}
-
-		function TranslateButton_SetState() {
-			if (this._ntext.parentNode !== null) {
-				ReplaceNode(this._ntext, this._otext)
-				this.innerText = TRANSLATE_TEXT;
-			} else {
-				ReplaceNode(this._otext, this._ntext)
-				this.innerText = UNDO_TEXT;
-			}
-		}
-
-		function TranslateButton_Translate() {
-			this.onclick = TranslateButton_SetState
-			fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${TARGET}&dt=t&q=${encodeURIComponent(this._otext.innerText)}`)
-				.then(response => response.json()).then(json => {
-					for (let i = 0; i < json[0].length; i++) this._ntext.innerText += json[0][i][0].replace('\n', ' ');
-					this.onclick()
-				})
-		}
-
-		function ResetTranslateButton(tb) {
-			if (tb._ntext.parentNode !== null) ReplaceNode(tb._ntext, tb._otext);
-
-			tb._ntext.innerText = ""
-			tb.innerText = TRANSLATE_TEXT
-			tb.onclick = TranslateButton_Translate
-		}
-
-		function TranslateButton(main) {
-			let tb = document.createElement("a")
-			tb.id = "translate-button"
-			tb.style = "margin-left: 5px"
-			tb.classList = "yt-simple-endpoint style-scope yt-formatted-string"
-
-			tb._otext = main.querySelector(QS_CONTENT_TEXT)
-			tb._otext.addEventListener("DOMSubtreeModified", _ => ResetTranslateButton(tb))
-
-			tb._ntext = document.createElement("div")
-			tb._ntext.style.whiteSpace = "pre-wrap"
-			tb._ntext.id = "content-text"
-			tb._ntext.classList = "style-scope ytd-comment-renderer translate-text yt-formatted-string"
-
-			ResetTranslateButton(tb)
-			return tb
-		}
-
 		const QS_TRANSLATE_BUTTON = "#header>#header-author>yt-formatted-string>#translate-button";
 		const QS_CONTENT_TEXT = "#expander>#content>#content-text";
 		const QS_BUTTON_CONTAINER = "#header>#header-author>#published-time-text";
+		const TRANSLATE_TEXT = "Перевести", UNDO_TEXT = "Вернуть", TARGET = navigator.language || navigator.userLanguage;
 
-		/* User settings */
-		let TRANSLATE_TEXT = "Перевести", UNDO_TEXT = "Вернуть", TARGET = navigator.language || navigator.userLanguage;
+		const replaceNode = (a, b) => a.replaceWith(b);
+		const resetTranslateButton = (tb) => {
+			if (tb._ntext.isConnected) replaceNode(tb._ntext, tb._otext);
+			tb._ntext.innerText = "";
+			tb.innerText = TRANSLATE_TEXT;
+			tb.onclick = translateButtonTranslate;
+		};
+		const translateButtonSetState = function () {
+			const isTranslated = this._ntext.isConnected;
+			replaceNode(isTranslated ? this._ntext : this._otext, isTranslated ? this._otext : this._ntext);
+			this.innerText = isTranslated ? TRANSLATE_TEXT : UNDO_TEXT;
+		};
+		const translateButtonTranslate = function () {
+			this.onclick = translateButtonSetState;
+			fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${TARGET}&dt=t&q=${encodeURIComponent(this._otext.innerText)}`)
+				.then(response => response.json())
+				.then(json => {
+					this._ntext.innerText = json[0].map(item => item[0].replace('\n', ' ')).join(' ');
+					this.onclick();
+				});
+		};
+		const createTranslateButton = (main) => {
+			const tb = document.createElement("a");
+			tb.id = "translate-button";
+			tb.style.marginLeft = "5px";
+			tb.className = "yt-simple-endpoint style-scope yt-formatted-string";
 
-		inject()
+			tb._otext = main.querySelector(QS_CONTENT_TEXT);
+			tb._ntext = document.createElement("div");
+			tb._ntext.style.whiteSpace = "pre-wrap";
 
-		function inject() {
-			const observerConfig = { childList: true, subtree: true };
-			const commentObserver = new MutationObserver(e => {
-				for (let mut of e) {
-					if (mut.target.id == "contents") {
-						for (let n of mut.addedNodes) {
-							let main = n.querySelector("#body>#main")
-							if (!main) continue;
+			// Добавляем наследование стилей от оригинального текста
+			tb._ntext.style.fontSize = window.getComputedStyle(tb._otext).fontSize;
+			tb._ntext.style.fontFamily = window.getComputedStyle(tb._otext).fontFamily;
+			tb._ntext.style.lineHeight = "2rem";
+			tb._ntext.className = "style-scope ytd-comment-renderer translate-text yt-formatted-string";
 
-							let tb = main.querySelector(QS_TRANSLATE_BUTTON)
-							if (tb != null) {
-								ResetTranslateButton(tb)
-							} else {
-								main.querySelector(QS_BUTTON_CONTAINER).appendChild(TranslateButton(main))
+			tb._otext.addEventListener("DOMSubtreeModified", () => resetTranslateButton(tb));
+
+			resetTranslateButton(tb);
+			return tb;
+		};
+
+
+		const injectTranslateButton = () => {
+			const observer = new MutationObserver(mutations => {
+				mutations.forEach(mutation => {
+					if (mutation.target.id === "contents") {
+						mutation.addedNodes.forEach(node => {
+							const main = node.querySelector("#body>#main");
+							if (main) {
+								const existingButton = main.querySelector(QS_TRANSLATE_BUTTON);
+								if (existingButton) {
+									resetTranslateButton(existingButton);
+								} else {
+									main.querySelector(QS_BUTTON_CONTAINER).appendChild(createTranslateButton(main));
+								}
 							}
-						}
+						});
 					}
-				}
-			})
+				});
+			});
+			observer.observe(document, { childList: true, subtree: true });
+		};
 
-			commentObserver.observe(document, observerConfig)
-		}
+		injectTranslateButton();
 	}
 
 	function AutoTranslateSubtitles() {
@@ -1907,6 +1906,31 @@
 	}
 	async function Delay(ms = 1000) {
 		return new Promise(resolve => setTimeout(resolve, ms))
+	}
+	function GetUserLanguage() {
+		if (document.documentElement.lang) {
+			return document.documentElement.lang;
+		} else if (navigator.language) {
+			return navigator.language;
+		} else {
+			try {
+				return new URL(
+					Array.from(document.querySelectorAll("head > link[rel='search']"))
+						?.find((n) => n?.getAttribute("href")?.includes("?locale="))
+						?.getAttribute("href"),
+				)?.searchParams?.get("locale");
+			} catch {
+				console.log("Cannot find browser locale. Use en as default for number formatting.");
+				return "en";
+			}
+		}
+	}
+	function roundDown(num) {
+		if (num < 1000) return num;
+		const int = Math.floor(Math.log10(num) - 2);
+		const decimal = int + (int % 3 ? 1 : 0);
+		const value = Math.floor(num / 10 ** decimal);
+		return value * 10 ** decimal;
 	}
 	//#endregion
 })()
