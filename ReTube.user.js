@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ReTube
 // @namespace 	http://tampermonkey.net/
-// @version      4.3.2
+// @version      4.3.3
 // @description ReTube
 // @author       Eject
 // @match        *://www.youtube.com/*
@@ -72,8 +72,8 @@
 	//#endregion
 
 	// Обходим внедрение HTML кода
-	try { document.head.insertAdjacentHTML('beforeend', '<trusted-test></trusted-test>') }
-	catch { trustedTypes.createPolicy('default', { createHTML: (input) => input }); }
+	try { document.head.insertAdjacentHTML('beforeend', '<trusted-test></trusted-test>'); }
+	catch { try { trustedTypes.createPolicy('default', { createHTML: (input) => input }); } catch { } }
 
 	if (RTanimateLoad) {
 		waitSelector('head').then(() => {
@@ -84,6 +84,7 @@
 			pushCSS('#text-container.ytd-recognition-shelf-renderer, #items:is(.yt-horizontal-list-renderer, .ytd-horizontal-card-list-renderer), h2:is(.ytd-rich-shelf-renderer, .ytd-shelf-renderer), #subtitle.ytd-shelf-renderer, #primary-items.ytd-channel-sub-menu-renderer, .ytd-watch-metadata:is(h1, ytd-badge-supported-renderer, #owner), .thumbnail-and-metadata-wrapper.ytd-playlist-header-renderer, h3.ytd-channel-featured-content-renderer, .ytd-horizontal-card-list-renderer:is(#header, #header-button), h2.ytd-reel-shelf-renderer {animation: cubic-bezier(0.4, 0, 0.2, 1) fadeInRight .8s;} @keyframes fadeInRight {from {opacity: 0;transform: translateX(-20px);}to {opacity: 1;transform: translateX(0px);}}', 'rtAnimFadeInLeft')
 		})
 	}
+
 	if (RTDefaultVolume) ForceDefaultVideoVolume(true)
 	if (RThideAllTrash) HideTrash(true)
 	if (RTvideoDateCreated) finishEvent(() => DateTimeCreated(true, RTSettingsDateOnVideoBackgroundChange))
@@ -867,7 +868,7 @@
 			'.yt-content-metadata-view-model-wiz__metadata-text, .yt-list-item-view-model-wiz__container--compact .yt-list-item-view-model-wiz__title-wrapper, ' +
 			'#channel-handle.ytd-active-account-header-renderer, ytd-active-account-header-renderer[enable-handles-account-menu-switcher] #account-name.ytd-active-account-header-renderer, ' +
 			'.yt-video-attribute-view-model__subtitle, .yt-video-attribute-view-model__secondary-subtitle, .title.reel-player-header-renderer, .ytStorybookReelMultiFromatLinkViewModelLink, ' +
-			'ytd-video-meta-block:not([rich-meta]) #byline-container.ytd-video-meta-block {font-family: Ubuntu !important;}' +
+			'ytd-video-meta-block:not([rich-meta]) #byline-container.ytd-video-meta-block, ytd-post-renderer[uses-compact-lockup] #author-text.yt-simple-endpoint.ytd-post-renderer {font-family: Ubuntu !important;}' +
 
 			'div.style-scope.ytd-rich-grid-row {font-weight: 400 !important;}' +
 
@@ -1083,6 +1084,7 @@
 
 			countElement.textContent = dislikeText;
 			container.title = dislikeText;
+			container.querySelector('.yt-spec-button-shape-next__icon').style.marginRight = '3px';
 		}
 
 		function FormatDislikeCount(count) {
