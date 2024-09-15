@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ReTube
 // @namespace 	http://tampermonkey.net/
-// @version      4.3.3
+// @version      4.3.4
 // @description ReTube
 // @author       Eject
 // @match        *://www.youtube.com/*
@@ -73,7 +73,7 @@
 
 	// Обходим внедрение HTML кода
 	try { document.head.insertAdjacentHTML('beforeend', '<trusted-test></trusted-test>'); }
-	catch { try { trustedTypes.createPolicy('default', { createHTML: (input) => input }); } catch { } }
+	catch { try { trustedTypes.createPolicy('default', { createHTML: input => input }); } catch { } }
 
 	if (RTanimateLoad) {
 		waitSelector('head').then(() => {
@@ -494,28 +494,20 @@
 			checkbox3.addEventListener('change', e => document.querySelector(".rt-settingsDateOnVideoBackgroundDiv").toggleAttribute('hidden', !e.target.checked))
 
 			document.querySelectorAll('.retube-label').forEach(label => {
-				const tooltipText = label.getAttribute('retube-tooltip')
-				if (tooltipText?.includes('http')) {
-					const randomNumber = getRandomInt()
-					label.classList.add('RT' + randomNumber)
+				const tooltipText = label.getAttribute('retube-tooltip');
+				if (!tooltipText) return;
 
-					const tooltipStyle = document.createElement('style')
-					tooltipStyle.innerHTML = `.retube-label.RT${randomNumber}::after {content: "" !important; background-image: url("${tooltipText}"); background-size: cover; width: 400px; height: 225px}`
-					document.head.appendChild(tooltipStyle)
-				}
-				else if (tooltipText?.includes('||')) {
-					const randomNumber = getRandomInt()
-					label.classList.add('RT' + randomNumber)
+				const randomClass = `RT${Math.floor(Math.random() * 100000)}`;
+				label.classList.add(randomClass);
 
-					const tooltipStyle = document.createElement('style')
-					tooltipStyle.innerHTML = `.retube-label.RT${randomNumber}::after {content: "${tooltipText.replaceAll('||', '\\a')}" !important; white-space: pre}`
-					document.head.appendChild(tooltipStyle)
-				}
+				const styleContent = tooltipText.includes('http')
+					? `content: ""; background-image: url("${tooltipText}"); background-size: cover; width: 400px; height: 225px;`
+					: `content: "${tooltipText.replaceAll('||', '\\a')}"; white-space: pre;`;
 
-				function getRandomInt() {
-					return Math.floor(Math.random() * 100000);
-				}
-			})
+				const tooltipStyle = document.createElement('style');
+				tooltipStyle.innerHTML = `.retube-label.${randomClass}::after {${styleContent}}`;
+				document.head.appendChild(tooltipStyle);
+			});
 
 			document.querySelectorAll('.retube-button-reset').forEach(button => {
 				button.setAttribute('retube-tooltip', 'Сброс цвета')
@@ -610,49 +602,45 @@
 			})
 
 			const dragHeader = (() => {
-				let isDragging = false
-				let offsetX, offsetY
+				let isDragging = false;
+				let offsetX, offsetY;
 
-				const draggableWindow = document.querySelector('#retube-menu')
-				const windowPadding = 10
-				const snapDistance = 20
+				const draggableWindow = document.querySelector('#retube-menu');
+				const windowPadding = 10;
+				const snapDistance = 20;
 
 				const setPosition = (x, y) => {
-					draggableWindow.style.left = x + 'px'
-					draggableWindow.style.top = y + 'px'
-				}
+					draggableWindow.style.left = `${x}px`;
+					draggableWindow.style.top = `${y}px`;
+				};
 
 				return (e) => {
-					switch (e.type) {
-						case 'mousedown':
-							e.preventDefault()
-							isDragging = true
-							const { offsetLeft, offsetTop } = draggableWindow
-							offsetX = e.clientX - offsetLeft
-							offsetY = e.clientY - offsetTop
-							break
-						case 'mousemove':
-							if (!isDragging) return
-							const { clientX, clientY } = e
-							const x = clientX - offsetX
-							const y = clientY - offsetY
+					if (e.type === 'mousedown') {
+						e.preventDefault();
+						isDragging = true;
+						const { offsetLeft, offsetTop } = draggableWindow;
+						offsetX = e.clientX - offsetLeft;
+						offsetY = e.clientY - offsetTop;
+					} else if (e.type === 'mousemove' && isDragging) {
+						const x = e.clientX - offsetX;
+						const y = e.clientY - offsetY;
 
-							const snapXLeft = x <= snapDistance ? windowPadding : null
-							const snapXRight = x >= window.innerWidth - draggableWindow.offsetWidth - (snapDistance + 10) ? window.innerWidth - draggableWindow.offsetWidth - (windowPadding + 10) : null
-							const snapYTop = y <= snapDistance ? windowPadding : null
-							const snapYBottom = y >= window.innerHeight - draggableWindow.offsetHeight - snapDistance ? window.innerHeight - draggableWindow.offsetHeight - windowPadding : null
+						const snapX = x <= snapDistance ? windowPadding :
+							x >= window.innerWidth - draggableWindow.offsetWidth - (snapDistance + 10) ? window.innerWidth - draggableWindow.offsetWidth - (windowPadding + 10) : x;
+						const snapY = y <= snapDistance ? windowPadding :
+							y >= window.innerHeight - draggableWindow.offsetHeight - snapDistance ? window.innerHeight - draggableWindow.offsetHeight - windowPadding : y;
 
-							setPosition(snapXLeft !== null ? snapXLeft : snapXRight !== null ? snapXRight : x, snapYTop !== null ? snapYTop : snapYBottom !== null ? snapYBottom : y)
-							break
-						case 'mouseup':
-							isDragging = false
-							break
+						setPosition(snapX, snapY);
+					} else if (e.type === 'mouseup') {
+						isDragging = false;
 					}
-				}
-			})()
-			document.querySelector('#rt-head').addEventListener('mousedown', dragHeader)
-			document.addEventListener('mousemove', dragHeader)
-			document.addEventListener('mouseup', dragHeader)
+				};
+			})();
+
+			document.querySelector('#rt-head').addEventListener('mousedown', dragHeader);
+			document.addEventListener('mousemove', dragHeader);
+			document.addEventListener('mouseup', dragHeader);
+
 
 			document.querySelector('#rt-closeImg-head').addEventListener('click', () => document.querySelector('#retube-menu')?.toggleAttribute('hidden'))
 			//#endregion
@@ -909,7 +897,7 @@
 			'#message.yt-live-chat-viewer-engagement-message-renderer, html, .animated-rolling-number-wiz, #video-title.ytd-reel-item-renderer, .html5-video-player, tp-yt-paper-toast.yt-notification-action-renderer, ' +
 			'.truncated-text-wiz--medium-text .truncated-text-wiz__absolute-button, yt-formatted-string.ytd-menu-service-item-download-renderer, ' +
 			'.more-button.ytd-comment-view-model, .less-button.ytd-comment-view-model, .YtChipShapeChip, ytd-thumbnail-overlay-bottom-panel-renderer, ' +
-			'ytd-thumbnail-overlay-toggle-button-renderer[use-expandable-tooltip] #label.ytd-thumbnail-overlay-toggle-button-renderer {font-family: "Ubuntu Light Custom" !important}' +
+			'ytd-thumbnail-overlay-toggle-button-renderer[use-expandable-tooltip] #label.ytd-thumbnail-overlay-toggle-button-renderer, .ShortsLockupViewModelHostOutsideMetadataTitle {font-family: "Ubuntu Light Custom" !important}' +
 
 			'ytd-watch-metadata[title-headline-xs] h1.ytd-watch-metadata {font-family: "YouTube Sans"; font-weight: 600}'
 			, 'rt-betterFontStyle')
@@ -1002,12 +990,18 @@
 
 	function RemoveNotificationNumber() {
 		try {
-			new MutationObserver((e) => {
-				if (e[0].addedNodes[0].data != e[0].removedNodes[0].data) {
-					document.title = document.title.replace(/^(\(\d*\))\s*/, "");
-				}
-			}).observe(document.querySelector("title"), { childList: true, characterDataOldValue: true });
-		} catch { }
+			new MutationObserver(mutations => {
+				mutations.forEach(mutation => {
+					if (mutation.type === 'childList' || mutation.type === 'characterData') {
+						if (document.title.match(/^\(\d+\)\s*/)) {
+							document.title = document.title.replace(/^\(\d+\)\s*/, "");
+						}
+					}
+				});
+			}).observe(document.querySelector('head > title') || document.head, { childList: true, subtree: true, characterData: true });
+		} catch (e) {
+			console.error(e);
+		}
 	}
 
 	function CustomIcon(custom, color) {
@@ -1516,6 +1510,7 @@
 			tb._ntext.style.fontSize = window.getComputedStyle(tb._otext).fontSize;
 			tb._ntext.style.fontFamily = window.getComputedStyle(tb._otext).fontFamily;
 			tb._ntext.style.lineHeight = "2rem";
+			tb._ntext.style.color = "var(--yt-spec-text-primary)";
 			tb._ntext.className = "style-scope ytd-comment-renderer translate-text yt-formatted-string";
 
 			tb._otext.addEventListener("DOMSubtreeModified", () => resetTranslateButton(tb));
