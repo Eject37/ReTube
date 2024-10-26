@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ReTube
 // @namespace 	http://tampermonkey.net/
-// @version      4.3.4
+// @version      4.3.5
 // @description ReTube
 // @author       Eject
 // @match        *://www.youtube.com/*
@@ -686,16 +686,17 @@
 			'.ytp-live-badge[disabled]:before {background: var(--YT-videoProgress-color) !important}' + // Круглый значок 'В эфире'
 			'#ytp-id-17, #ytp-id-18, #ytp-id-19, .ytp-popup {background: var(--YT-overlayMenu-color) !important; backdrop-filter: blur(15px)}' + // Цвет фона настроек видео
 			'html[dark], [dark] {--yt-spec-wordmark-text: var(--YT-iconText-color)}' + // Надпись возле иконки ютуба
-			'svg.external-icon > svg > g > path:nth-child(1), #card svg g g path:nth-child(1) {fill: var(--YT-icon-color)}' + // Иконка ютуба
-			'#logo-icon > svg > g > g:nth-child(1) > path:nth-child(1) {fill: var(--YT-icon-color)}' + // Иконка ютуба (старый дизайн)
+			'path[d^="M14.4848 20C14.4848"] {fill: var(--YT-icon-color)}' + // Иконка ютуба
+			'svg.external-icon > svg > g > path:nth-child(1), #card svg g g path:nth-child(1) {fill: var(--YT-icon-color)}' + // Иконка ютуба старый дизайн
+			'#logo-icon > svg > g > g:nth-child(1) > path:nth-child(1) {fill: var(--YT-icon-color)}' + // Иконка ютуба очень старый дизайн
 			'.html5-video-player {background: var(--YT-player-color)}' + // Цвет фона плеера
 			'#time-status.ytd-thumbnail-overlay-time-status-renderer, .badge-shape-wiz--default.badge-shape-wiz--overlay, .badge-shape-wiz--thumbnail-default {background: var(--YT-videoTime-color); backdrop-filter: blur(10px)}' + // Фон рамки с длительносьтю видео
 			'.badge-shape-wiz--live.badge-shape-wiz--overlay {background: var(--YT-HD4KBadge-color); backdrop-filter: blur(10px)}' + // Фон рамки 'В эфире'
-			'.yt-spec-icon-badge-shape--type-notification .yt-spec-icon-badge-shape__badge {background-color: var(--YT-notificationsBadge-color)}' + // Цвет бэйджа количества уведомлений
+			'.yt-spec-icon-badge-shape--type-notification .yt-spec-icon-badge-shape__badge {background-color: var(--YT-notificationsBadge-color); color: var(--YT-text-color) !important}' + // Цвет бэйджа количества уведомлений
 			'sup.ytp-swatch-color-white {color: var(--YT-link-color)}' + // Цвет надписей HD в выборе качества
 			'.ytp-chrome-controls .ytp-button[aria-pressed]:after {background-color: var(--YT-panelActiveButton-color) !important}' + // Цвет полоски снизу включённых субтитров
 
-			'.ytp-button.ytp-settings-button.ytp-hd-quality-badge:after, .ytp-button.ytp-settings-button.ytp-4k-quality-badge:after, .ytp-button.ytp-settings-button.ytp-8k-quality-badge:after {background-color: var(--YT-HD4KBadge-color); border-radius: 3px}' + // Надписи HD, 4K, 8K
+			'.ytp-button.ytp-settings-button.ytp-hd-quality-badge:after, .ytp-button.ytp-settings-button.ytp-4k-quality-badge:after, .ytp-button.ytp-settings-button.ytp-8k-quality-badge:after {background-color: var(--YT-HD4KBadge-color) !important; border-radius: 3px}' + // Надписи HD, 4K, 8K
 			'.ytp-big-mode .ytp-settings-button.ytp-hd-quality-badge:after, .ytp-big-mode .ytp-settings-button.ytp-4k-quality-badge:after, .ytp-big-mode .ytp-settings-button.ytp-8k-quality-badge:after {border-radius: 6px !important}' + // Надписи HD, 4K, 8K в полном экране
 
 			'.ytp-menuitem[aria-checked=true] .ytp-menuitem-toggle-checkbox {background: var(--YT-notificationsBadge-color) !important}' + // Задний цвет тугл кнопок в настройках видео
@@ -734,7 +735,10 @@
 			'.yt-spec-button-shape-next--call-to-action-inverse.yt-spec-button-shape-next--text {color: var(--YT-link-color)}' +
 
 			// Красим панель 'До начала трансляции'
-			'.ytp-offline-slate-bar {background: rgba(0, 0, 0, 0.4) !important; backdrop-filter: blur(15px) !important} .ytp-offline-slate-button {background: var(--YT-searchBorderHover-color) !important; border-radius: 15px !important}'
+			'.ytp-offline-slate-bar {background: rgba(0, 0, 0, 0.4) !important; backdrop-filter: blur(15px) !important} .ytp-offline-slate-button {background: var(--YT-searchBorderHover-color) !important; border-radius: 15px !important}' +
+
+			// Полоса прогресса загрузки страницы вверху сайта
+			'yt-page-navigation-progress[enable-refresh-signature-moments-web] #progress.yt-page-navigation-progress {background: var(--YT-videoProgress-color)}'
 			, 'rt-paint')
 
 		// --yt-spec-text-secondary: #aaa
@@ -775,11 +779,15 @@
 			'yt-multi-page-menu-section-renderer:nth-child(5) {display: none}' + // Кнопки справка и отправить отзыв в меню аккаунта
 			'.ytp-fullerscreen-edu-button-subtle {display: none !important}' + // Кнопка под прогрессбаром в полном экране (прокрутите для доп. информации)
 			'button[id="infoButton"] {display: none !important}' + // Кнопка информационной панели от SponsorBlock (в плеере)
+			'#sponsor-button {display: none !important}' + // Кнопка стать спонсором возле кнопки подписки на канал
 
 			'.ytp-paid-content-overlay, .iv-branding, #movie_player > [class^="ytp-ce-"], .ytp-cards-teaser-text, ytm-paid-content-overlay-renderer, ' +
 			'ytd-search-pyv-renderer, [class^="ytd-promoted-"], ytd-video-renderer + ytd-shelf-renderer, ytd-video-renderer + ytd-reel-shelf-renderer, ' +
 			'#clarify-box, .ytd-watch-flexy.attached-message, ytd-popup-container tp-yt-paper-dialog ytd-single-option-survey-renderer, #donation-shelf ytd-donation-unavailable-renderer, ' +
-			'.sparkles-light-cta, ytd-feed-nudge-renderer, .ytp-pause-overlay-container, .ytp-settings-menu .ytp-panel-menu > .ytp-menuitem[role="menuitemcheckbox"] {display: none !important}'
+			'.sparkles-light-cta, ytd-feed-nudge-renderer, .ytp-pause-overlay-container {display: none !important}' +
+
+			// Кнопка Аннотации и Автовыключение в настройках видео
+			'.ytp-settings-menu .ytp-panel-menu > .ytp-menuitem[role="menuitemcheckbox"], .ytp-settings-menu .ytp-panel-menu > .ytp-menuitem:has(path[d^="M16.67,4.31C19"]) {display: none !important}'
 			, 'rt-hideTrashStyle')
 
 		// Скрываем кнопки под видео
