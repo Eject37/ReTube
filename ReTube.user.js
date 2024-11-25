@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ReTube
 // @namespace 	http://tampermonkey.net/
-// @version      4.3.6
+// @version      4.3.7
 // @description ReTube
 // @author       Eject
 // @match        *://www.youtube.com/*
@@ -1426,10 +1426,13 @@
 	}
 
 	function MiddleClickSearch() {
-		const searchSuggestion = '.YtSearchboxComponentSuggestionsContainer > .YtSuggestionComponentSuggestion'
+		const inputText = () => document.querySelector('.YtSearchboxComponentInput, input.ytd-searchbox').value.trim()
+		const searchButton = '.YtSearchboxComponentSearchButton, #search-icon-legacy'
+		const searchSuggestion = '.sbsb_c.gsfs:not(.done), .YtSearchboxComponentSuggestionsContainer > .YtSuggestionComponentSuggestion:not(.done)'
+		const suggestionText = '.sbpqs_a, .YtSuggestionComponentLeftContainer .YtSuggestionComponentBold'
 		suggEl()
 
-		waitSelector('.YtSearchboxComponentSearchButton').then(btn => {
+		waitSelector(searchButton).then(btn => {
 			btn.addEventListener('mousedown', e => {
 				if (e.button === 1) {
 					e.preventDefault()
@@ -1442,15 +1445,14 @@
 				e.preventDefault()
 				e.stopImmediatePropagation()
 
-				const input = document.querySelector('.YtSearchboxComponentInput').value.trim()
-				if (!input) return;
-
-				GM_openInTab(`${location.origin}/results?search_query=${encodeURIComponent(input).replace(/%20/gu, '+')}`, true)
+				const queryValue = inputText()
+				if (!queryValue) return;
+				GM_openInTab(`${location.origin}/results?search_query=${encodeURIComponent(queryValue).replace(/%20/gu, '+')}`, true)
 			})
 		})
 
 		function suggEl() {
-			waitSelector(searchSuggestion + ':not(.done)', { stop_on_page_change: true }).then(el => {
+			waitSelector(searchSuggestion, { stop_on_page_change: true }).then(el => {
 				el.classList.add('done')
 
 				el.addEventListener('mousedown', e => {
@@ -1466,7 +1468,7 @@
 					e.preventDefault()
 					e.stopImmediatePropagation()
 
-					const text = el.querySelector('.YtSuggestionComponentLeftContainer .YtSuggestionComponentBold').textContent
+					const text = el.querySelector(suggestionText).textContent
 					GM_openInTab(`${location.origin}/results?search_query=${encodeURIComponent(text).replace(/%20/gu, '+')}`, true)
 				})
 
