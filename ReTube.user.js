@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ReTube
 // @namespace 	http://tampermonkey.net/
-// @version      4.3.7
+// @version      4.3.8
 // @description ReTube
 // @author       Eject
 // @match        *://www.youtube.com/*
@@ -666,15 +666,15 @@
 			'html[dark], [dark] {--yt-spec-base-background: var(--YT-main-color)}' + // Цвет фона всего ютуба
 			'html[darker-dark-theme][dark], [darker-dark-theme] [dark] {--yt-spec-text-primary: var(--YT-text-color)}' + // Цвет текста всего ютуба
 			'html[dark], [dark] {--yt-spec-menu-background: var(--YT-overlayMenu-color)} ytd-simple-menu-header-renderer {background-color: transparent}' + // Цвет фона панели уведомлений
-			'html[dark], [dark] {--yt-spec-raised-background: var(--YT-overlayMenu-color)} .YtSearchboxComponentSuggestionsContainer {background-color: var(--YT-overlayMenu-color)}' + // Цвет элементов при поиске видео + цвет фона добавления в плейлист
+			'html[dark], [dark] {--yt-spec-raised-background: var(--YT-overlayMenu-color)} .YtSearchboxComponentSuggestionsContainer, .ytSearchboxComponentSuggestionsContainer {background-color: var(--YT-overlayMenu-color)}' + // Цвет элементов при поиске видео + цвет фона добавления в плейлист
 			'html[dark], [dark] {--yt-spec-brand-background-primary: var(--YT-additional-color); --yt-spec-general-background-a: var(--YT-main-color)}' + // Задние цвета активного плейлиста
 			'html[dark], [dark] {--yt-spec-badge-chip-background: var(--YT-additional-color); --yt-spec-button-chip-background-hover: var(--YT-hover-and-dateVideoLoad-color)}' + // Цвет фона описания видео
 			'.yt-spec-button-shape-next--mono.yt-spec-button-shape-next--tonal:hover, .yt-spec-button-shape-next--mono.yt-spec-button-shape-next--filled:hover {background-color: var(--YT-hoverVideoButton-color)}' + // Цвет фона лайков и прочих кнопок при наведении
 			'ytd-playlist-panel-renderer[use-color-palette][is-dark-theme] {--yt-active-playlist-panel-background-color: var(--YT-hover-and-dateVideoLoad-color)}' + // Цвет фона текущего видео в плейлисте
 			'html[dark], [dark] {--yt-spec-call-to-action: var(--YT-link-color); --yt-spec-themed-blue: var(--YT-link-color)} .yt-core-attributed-string__link--call-to-action-color {color: var(--yt-spec-call-to-action) !important} .yt-spec-button-shape-next--call-to-action.yt-spec-button-shape-next--text {color: var(--yt-spec-call-to-action)} .yt-spec-button-shape-next--call-to-action.yt-spec-button-shape-next--text:hover {background-color: var(--YT-additional-color)}' + // Цвет ссылок
 			'html[dark], [dark] {--ytd-searchbox-background: var(--YT-main-color)}' + // Задний цвет панели поиска
-			'.YtSearchboxComponentInputBoxDark {background-color: var(--YT-main-color)}' + // Панель поиска
-			'.YtSuggestionComponentPersonalizedSuggestion, .YtSuggestionComponentSuggestion {color: var(--YT-text-color)} .YtSuggestionComponentRemoveLinkDark {color: var(--YT-link-color)}' + // Цвет текста в окне результатов поиска
+			'.YtSearchboxComponentInputBoxDark, .ytSearchboxComponentInputBoxDark {background-color: var(--YT-main-color)}' + // Панель поиска
+			'.YtSuggestionComponentPersonalizedSuggestion, .YtSuggestionComponentSuggestion, .ytSuggestionComponentPersonalizedSuggestion, .ytSuggestionComponentSuggestion {color: var(--YT-text-color)} .YtSuggestionComponentRemoveLinkDark, .ytSuggestionComponentRemoveLinkDark {color: var(--YT-link-color)}' + // Цвет текста в окне результатов поиска
 			'html[dark] {--yt-live-chat-background-color: var(--YT-main-color)}' +
 			'ytd-playlist-panel-renderer#playlist {--yt-lightsource-secondary-title-color: var(--YT-text-color) !important; --yt-lightsource-primary-title-color: var(--YT-text-color) !important}' + // Цвет текста активного видео в плейлисте (название + канал)
 			'html[system-icons][dark], html[system-icons] [dark] {--yt-spec-brand-icon-inactive: var(--YT-icon-inactive)}' +
@@ -683,7 +683,7 @@
 			'html[dark], [dark] {--ytd-searchbox-legacy-button-hover-border-color: var(--YT-searchBorderHover-color)}' +
 			'html[dark], [dark] {--ytd-searchbox-legacy-border-color: var(--YT-searchBorder-color)}' +
 			'html[dark], [dark] {--ytd-searchbox-legacy-button-border-color: var(--YT-searchBorder-color)}' +
-			'html[dark], [dark] {--yt-spec-static-brand-red: var(--YT-videoProgress-color)}' + // Цвет прогресса просмотренных видео
+			'html[dark], [dark] {--yt-spec-static-brand-red: var(--YT-videoProgress-color)} .YtThumbnailOverlayProgressBarHostWatchedProgressBarSegmentModern {background: var(--YT-videoProgress-color)}' + // Цвет прогресса просмотренных видео
 			'.ytp-swatch-background-color, #progress.ytd-thumbnail-overlay-resume-playback-renderer {background: var(--YT-videoProgress-color) !important} .ytp-load-progress {transition: transform 1.5s ease-in-out}' + // Полоска прогресса видео + плавная прогрузка
 			'.ytp-live-badge[disabled]:before {background: var(--YT-videoProgress-color) !important}' + // Круглый значок 'В эфире'
 			'#ytp-id-17, #ytp-id-18, #ytp-id-19, .ytp-popup {background: var(--YT-overlayMenu-color) !important; backdrop-filter: blur(15px)}' + // Цвет фона настроек видео
@@ -715,11 +715,11 @@
 			'html[dark], [dark] {--yt-spec-outline: var(--YT-hoverAndPanels2-color)}' + // Панель упорядочить в комментариях + разные разделители
 			'.ytp-bezel-text {border-radius: 20px !important; font-weight: bold; backdrop-filter: blur(4px); }' + // Параметры всплывашки регулировки звука
 			'html[dark], [dark] {--ytd-searchbox-text-color: var(--YT-text-color)} #container.ytd-searchbox input.ytd-searchbox::placeholder, #container.ytd-searchbox>[slot=search-input] input::placeholder {color: var(--YT-searchBoxPlaceholder-color) !important}' + // Цвет текста в поисковой строке
-			'.YtSearchboxComponentInput::placeholder {color: var(--YT-searchBoxPlaceholder-color) !important} .YtSearchboxComponentInput {color: var(--YT-text-color)}' + // Цвет текста в поисковой строке (от 30.10.2024)
-			'html[dark] .sbsb_a, .YtSearchboxComponentSuggestionsContainer {backdrop-filter: blur(15px)}' + // Размытие элементов при поиске видео
+			'.YtSearchboxComponentInput::placeholder, .ytSearchboxComponentInput::placeholder {color: var(--YT-searchBoxPlaceholder-color) !important} .YtSearchboxComponentInput, .ytSearchboxComponentInput {color: var(--YT-text-color)}' + // Цвет текста в поисковой строке (от 30.10.2024)
+			'html[dark] .sbsb_a, .YtSearchboxComponentSuggestionsContainer, .ytSearchboxComponentSuggestionsContainer {backdrop-filter: blur(15px)}' + // Размытие элементов при поиске видео
 			'.ytp-doubletap-static-circle {background-color: rgba(0 0 0 / 50%) !important; backdrop-filter: blur(4px);} .ytp-doubletap-tooltip-label { font-size: 15px !important; font-weight: bold !important; margin-left: 8px;}' + // Параметры всплывашки перемотки видео
-			'ytd-searchbox[has-focus] #container.ytd-searchbox, .YtSearchboxComponentInputBoxDark.YtSearchboxComponentInputBoxHasFocus {border: 1px solid var(--ytd-searchbox-legacy-border-color) !important}' + // Обводка активной панели поиска
-			'.YtSearchboxComponentInputBoxDark {border-color: var(--ytd-searchbox-legacy-border-color)}' + // Обводка панели поиска
+			'ytd-searchbox[has-focus] #container.ytd-searchbox, .YtSearchboxComponentInputBoxDark.YtSearchboxComponentInputBoxHasFocus, .ytSearchboxComponentInputBoxDark.ytSearchboxComponentInputBoxHasFocus {border: 1px solid var(--ytd-searchbox-legacy-border-color) !important}' + // Обводка активной панели поиска
+			'.YtSearchboxComponentInputBoxDark, .ytSearchboxComponentInputBoxDark {border-color: var(--ytd-searchbox-legacy-border-color)}' + // Обводка панели поиска
 			'#card.yt-live-chat-viewer-engagement-message-renderer, #contents.yt-live-chat-mode-change-message-renderer {background-color: var(--YT-additional-color)}' + // В чате ютуба плашка, добро пожаловать в чат
 			'tp-yt-paper-dialog {backdrop-filter: blur(17px); background-color: var(--YT-overlayMenu-color)}' + // Окно добавления видео в плейлист
 			'#subscribe-button-shape > button {background-color: var(--YT-additional-color); color: var(--YT-text-color)} #subscribe-button-shape > button:hover {background-color: var(--YT-hoverVideoButton-color)}' + // Кнопка Подписаться
@@ -742,7 +742,18 @@
 			'.ytp-offline-slate-bar {background: rgba(0, 0, 0, 0.4) !important; backdrop-filter: blur(15px) !important} .ytp-offline-slate-button {background: var(--YT-searchBorderHover-color) !important; border-radius: 15px !important}' +
 
 			// Полоса прогресса загрузки страницы вверху сайта
-			'yt-page-navigation-progress[enable-refresh-signature-moments-web] #progress.yt-page-navigation-progress {background: var(--YT-videoProgress-color)}'
+			'yt-page-navigation-progress[enable-refresh-signature-moments-web] #progress.yt-page-navigation-progress {background: var(--YT-videoProgress-color)}' +
+
+			// Shorts
+			'#cinematic-shorts-scrim {display: none}' +
+
+			// Разные всплывающие окна (новые видео, нажатие на аватарку)
+			'.ytd-popup-container {backdrop-filter: blur(15px)}' +
+
+			// Кнопка Создать в шапке
+			'.ytd-masthead button:has(path[d^="M20 12h"]) {background: transparent !important} .ytd-masthead button:has(path[d^="M20 12h"]):hover {background: var(--yt-spec-10-percent-layer) !important}' +
+			'.ytd-masthead button:has(path[d^="M20 12h"]) > .yt-spec-button-shape-next__button-text-content {display: none !important}' +
+			'.ytd-masthead button:has(path[d^="M20 12h"]) > .yt-spec-button-shape-next__icon {margin-right: -10px; margin-left: -10px}'
 			, 'rt-paint')
 
 		// --yt-spec-text-secondary: #aaa
@@ -771,13 +782,12 @@
 			'a.ytp-next-button.ytp-button, a.ytp-prev-button.ytp-button, .ytp-jump-button {display: none !important}' + // Убирает кнопку вперёд и назад в плеере + перемотка на 10с
 			'.annotation.annotation-type-custom.iv-branding {display: none}' + // Аннотация канала в конце видео
 			'#reaction-control-panel {display: none}' + // Панель реакция на трансляции в чате
-			'.sbfl_a, .YtSearchboxComponentReportButton {display: none !important}' + // Надпись пожаловаться на поисковые подсказки
+			'.sbfl_a, .YtSearchboxComponentReportButton, .ytSearchboxComponentReportButton {display: none !important}' + // Надпись пожаловаться на поисковые подсказки
 			'[role="button"][aria-label="Добавить в очередь"], [role="button"][aria-label="Додати в чергу"] {display: none}' + // Кнопка на видео добавить в очередь
-			'.gsst_a, .YtSearchboxComponentYtdTextInputAssistantWrapper {display: none !important}' + // Кнопка клавиатуры при поиске видео
+			'.gsst_a, .YtSearchboxComponentYtdTextInputAssistantWrapper, .ytSearchboxComponentYtdTextInputAssistantWrapper {display: none !important}' + // Кнопка клавиатуры при поиске видео
 			'button[title="Автовоспроизведение выключено"], button[title="Автоматичне відтворення вимкнено"] {display: none !important}' + // Кнопка выключенного автовоспроизвидения в плеере
 			'button[title="Субтитры недоступны"], button[title="Субтитри недоступні"] {display: none !important}' + // Кнопка субтитров если они не доступны в плеере
 			'.ytp-button.ytp-remote-button {display: none !important}' + // Кнопка трансляции на телевизор в плеере
-			'.ytp-button.ytp-miniplayer-button {display: none !important}' + // Кнопка мини-плеера в плеере
 			'.ytp-button.ytp-miniplayer-button {display: none !important}' + // Кнопка мини-плеера в плеере
 			'#premium-upsell-link, .ytd-guide-renderer.style-scope:nth-of-type(4) {display: none}' + // Кнопка оформить youtube premium + секция другие возможности в левой панели
 			'yt-multi-page-menu-section-renderer:nth-child(5) {display: none}' + // Кнопки справка и отправить отзыв в меню аккаунта
@@ -868,7 +878,7 @@
 			'.yt-content-metadata-view-model-wiz__metadata-text, .yt-list-item-view-model-wiz__container--compact .yt-list-item-view-model-wiz__title-wrapper, ' +
 			'#channel-handle.ytd-active-account-header-renderer, ytd-active-account-header-renderer[enable-handles-account-menu-switcher] #account-name.ytd-active-account-header-renderer, ' +
 			'.yt-video-attribute-view-model__subtitle, .yt-video-attribute-view-model__secondary-subtitle, .title.reel-player-header-renderer, .ytStorybookReelMultiFromatLinkViewModelLink, ' +
-			'ytd-video-meta-block:not([rich-meta]) #byline-container.ytd-video-meta-block, ytd-post-renderer[uses-compact-lockup] #author-text.yt-simple-endpoint.ytd-post-renderer, .YtSearchboxComponentInput {font-family: Ubuntu !important;}' +
+			'ytd-video-meta-block:not([rich-meta]) #byline-container.ytd-video-meta-block, ytd-post-renderer[uses-compact-lockup] #author-text.yt-simple-endpoint.ytd-post-renderer, .YtSearchboxComponentInput, .ytSearchboxComponentInput {font-family: Ubuntu !important;}' +
 
 			'div.style-scope.ytd-rich-grid-row {font-weight: 400 !important;}' +
 
@@ -898,7 +908,7 @@
 			'yt-formatted-string.style-scope.ytd-video-renderer, a.yt-simple-endpoint.style-scope.ytd-grid-playlist-renderer, span.ytp-caption-segment, a.ytp-title-link.yt-uix-sessionlink.ytp-title-fullerscreen-link, div.ytp-menuitem-label, ' +
 			'#simplebox-placeholder.ytd-comment-simplebox-renderer, #label.ytd-playlist-add-to-option-renderer, .ytd-menu-title-renderer, #rt-videoCount, #content.ytd-channel-tagline-renderer, #first-link.ytd-channel-header-links-view-model, ' +
 			'#more.ytd-channel-header-links-view-model, .yt-spec-button-shape-next--call-to-action-inverse.yt-spec-button-shape-next--text, .yt-attribution-view-model-wiz--medium-text .yt-attribution-view-model-wiz__suffix, ' +
-			'.YtSuggestionComponentBold' +
+			'.YtSuggestionComponentBold, .yt-lockup-metadata-view-model-wiz--standard .yt-lockup-metadata-view-model-wiz__title' +
 			'{font-family: "Ubuntu" !important; font-weight: 400 !important;}' +
 
 			'.tp-yt-paper-tooltip[style-target=tooltip] {font-size: 1.35rem !important}' +
@@ -911,7 +921,7 @@
 			'.truncated-text-wiz--medium-text .truncated-text-wiz__absolute-button, yt-formatted-string.ytd-menu-service-item-download-renderer, ' +
 			'.more-button.ytd-comment-view-model, .less-button.ytd-comment-view-model, .YtChipShapeChip, ytd-thumbnail-overlay-bottom-panel-renderer, ' +
 			'ytd-thumbnail-overlay-toggle-button-renderer[use-expandable-tooltip] #label.ytd-thumbnail-overlay-toggle-button-renderer, .ShortsLockupViewModelHostOutsideMetadataTitle,' +
-			'ytd-thumbnail-overlay-hover-text-renderer, .yt-lockup-metadata-view-model-wiz--standard .yt-lockup-metadata-view-model-wiz__title {font-family: "Ubuntu Light Custom" !important}' +
+			'ytd-thumbnail-overlay-hover-text-renderer {font-family: "Ubuntu Light Custom" !important}' +
 
 			'ytd-watch-metadata[title-headline-xs] h1.ytd-watch-metadata {font-family: "YouTube Sans"; font-weight: 600}'
 			, 'rt-betterFontStyle')
@@ -1426,10 +1436,10 @@
 	}
 
 	function MiddleClickSearch() {
-		const inputText = () => document.querySelector('.YtSearchboxComponentInput, input.ytd-searchbox').value.trim()
-		const searchButton = '.YtSearchboxComponentSearchButton, #search-icon-legacy'
-		const searchSuggestion = '.sbsb_c.gsfs:not(.done), .YtSearchboxComponentSuggestionsContainer > .YtSuggestionComponentSuggestion:not(.done)'
-		const suggestionText = '.sbpqs_a, .YtSuggestionComponentLeftContainer .YtSuggestionComponentBold'
+		const inputText = () => document.querySelector('.YtSearchboxComponentInput, .ytSearchboxComponentInput, input.ytd-searchbox').value.trim()
+		const searchButton = '.YtSearchboxComponentSearchButton, .ytSearchboxComponentSearchButton, #search-icon-legacy'
+		const searchSuggestion = '.sbsb_c.gsfs:not(.done), .YtSearchboxComponentSuggestionsContainer > .YtSuggestionComponentSuggestion:not(.done), .ytSearchboxComponentSuggestionsContainer > .ytSuggestionComponentSuggestion:not(.done)'
+		const suggestionText = '.sbpqs_a, .YtSuggestionComponentLeftContainer .YtSuggestionComponentBold, .ytSuggestionComponentLeftContainer .ytSuggestionComponentBold'
 		suggEl()
 
 		waitSelector(searchButton).then(btn => {
