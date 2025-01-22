@@ -1,3 +1,5 @@
+[Discord сервер](https://discord.gg/8baJSRxXSm)
+
 **Поддержка скрипта временно приостановлена, обновления будут только по возможности.**
 
 Установка возможна любым менеджером скриптов, например [Violentmonkey](https://violentmonkey.github.io/get-it/)
