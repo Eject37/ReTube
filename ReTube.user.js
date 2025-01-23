@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ReTube
 // @namespace 	http://tampermonkey.net/
-// @version      4.3.8
+// @version      4.4.0
 // @description ReTube
 // @author       Eject
 // @match        *://www.youtube.com/*
@@ -67,9 +67,16 @@
 	let RTUpdateCheck = await getSavedSetting('rt-updateCheck') ? true : await GM_getValue('rt-updateCheck') === undefined
 	//#endregion
 	//#region Переменные
-	const api = 'AIzaSyBYoUuFiFjwRsvqPEbEIdGngobbeL9xs9o', userLanguage = GetUserLanguage()
+	const api = await GetApiKey(), userLanguage = GetUserLanguage()
 	let playerHoverHandler, isScrolling = false, wheel = false
 	//#endregion
+
+	// Исправление document.head null для Firefox
+	if (navigator.userAgent.includes('Firefox')) {
+		while (!document.head) {
+			await new Promise(resolve => setTimeout(resolve, 1));
+		}
+	}
 
 	// Обходим внедрение HTML кода
 	try { document.head.insertAdjacentHTML('beforeend', '<trusted-test></trusted-test>'); }
@@ -90,7 +97,7 @@
 	if (RTvideoDateCreated) finishEvent(() => DateTimeCreated(true, RTSettingsDateOnVideoBackgroundChange))
 	if (RTstopChannelTrailer) StopChannelTrailer()
 	if (RTvideoQuality) VideoQuality()
-	if (RTshowVideoCountOnChannel) runOnPageInitOrTransition(() => ShowVideoCountOnChannel())
+	if (RTshowVideoCountOnChannel) finishEvent(() => ShowVideoCountOnChannel())
 
 	if (document.readyState !== 'loading') ReTube(); else document.addEventListener('DOMContentLoaded', ReTube)
 
@@ -485,7 +492,7 @@
 			checkbox12.addEventListener('change', e => selectVideoQuality.toggleAttribute('hidden', !e.target.checked))
 			checkbox13.addEventListener('change', e => { if (e.target.checked) FixChannelLinks() })
 			checkbox15.addEventListener('change', e => { if (e.target.checked) DisableSleep() })
-			checkbox16.addEventListener('change', e => { if (e.target.checked) runOnPageInitOrTransition(() => ShowVideoCountOnChannel()) })
+			checkbox16.addEventListener('change', e => { if (e.target.checked) finishEvent(() => ShowVideoCountOnChannel()) })
 			checkbox17.addEventListener('change', e => { if (e.target.checked) HotkeysAlwaysActive() })
 			checkbox18.addEventListener('change', e => { if (e.target.checked) ScrollVolume() })
 			checkbox21.addEventListener('change', e => { if (e.target.checked) ScrollSpeed() })
@@ -753,7 +760,10 @@
 			// Кнопка Создать в шапке
 			'.ytd-masthead button:has(path[d^="M20 12h"]) {background: transparent !important} .ytd-masthead button:has(path[d^="M20 12h"]):hover {background: var(--yt-spec-10-percent-layer) !important}' +
 			'.ytd-masthead button:has(path[d^="M20 12h"]) > .yt-spec-button-shape-next__button-text-content {display: none !important}' +
-			'.ytd-masthead button:has(path[d^="M20 12h"]) > .yt-spec-button-shape-next__icon {margin-right: -10px; margin-left: -10px}'
+			'.ytd-masthead button:has(path[d^="M20 12h"]) > .yt-spec-button-shape-next__icon {margin-right: -10px; margin-left: -10px; color: white}' +
+
+			// Кружок на полосе прогресса видео (отображать только при наведении)
+			'.ytp-progress-bar-container:not(:hover) .ytp-scrubber-button {display: none}'
 			, 'rt-paint')
 
 		// --yt-spec-text-secondary: #aaa
@@ -878,7 +888,8 @@
 			'.yt-content-metadata-view-model-wiz__metadata-text, .yt-list-item-view-model-wiz__container--compact .yt-list-item-view-model-wiz__title-wrapper, ' +
 			'#channel-handle.ytd-active-account-header-renderer, ytd-active-account-header-renderer[enable-handles-account-menu-switcher] #account-name.ytd-active-account-header-renderer, ' +
 			'.yt-video-attribute-view-model__subtitle, .yt-video-attribute-view-model__secondary-subtitle, .title.reel-player-header-renderer, .ytStorybookReelMultiFromatLinkViewModelLink, ' +
-			'ytd-video-meta-block:not([rich-meta]) #byline-container.ytd-video-meta-block, ytd-post-renderer[uses-compact-lockup] #author-text.yt-simple-endpoint.ytd-post-renderer, .YtSearchboxComponentInput, .ytSearchboxComponentInput {font-family: Ubuntu !important;}' +
+			'ytd-video-meta-block:not([rich-meta]) #byline-container.ytd-video-meta-block, ytd-post-renderer[uses-compact-lockup] #author-text.yt-simple-endpoint.ytd-post-renderer, .YtSearchboxComponentInput, .ytSearchboxComponentInput, ' +
+			'#inner-background.ytd-thumbnail-overlay-endorsement-renderer {font-family: Ubuntu !important;}' +
 
 			'div.style-scope.ytd-rich-grid-row {font-weight: 400 !important;}' +
 
@@ -927,26 +938,16 @@
 			, 'rt-betterFontStyle')
 	}
 
-	function DateTimeCreated(date, style2) {
-		if (currentPage() != 'watch') return
+	function DateTimeCreated(showDate, style2) {
+		if (currentPage() != 'watch') return;
 
 		// Удаление старых элементов и стилей
 		['.video-date', '#dateVideoStyle', '#dateVideoStyle2'].forEach(selector => document.querySelector(selector)?.remove());
 
-		if (!date) return
+		if (!showDate) return
 
-		fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${getVideoId()}&key=${api}`).then(response => response.json()).then(json => {
-			const dateCreated = new Date(json.items[0].snippet.publishedAt).toLocaleString('ru-RU', {
-				day: 'numeric',
-				month: 'numeric',
-				year: 'numeric',
-				hour: 'numeric',
-				minute: 'numeric',
-				second: 'numeric',
-				hour12: false,
-			}).replace(',', '')
-
-			waitSelector('#title > h1').then(el => {
+		GetVideoDate().then(dateCreated => {
+			waitSelector('#title > h1', { stop_on_page_change: true }).then(el => {
 				document.querySelector('.video-date')?.remove()
 
 				const label = document.createElement('span')
@@ -961,7 +962,70 @@
 				}
 				el.appendChild(label)
 			})
-		}).catch()
+		})
+
+		async function GetVideoDate() {
+			const videoId = getVideoId();
+			const cacheKey = 'videoDates';
+			const apiUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${api}`;
+
+			const cachedDates = JSON.parse(localStorage.getItem(cacheKey)) || {};
+
+			if (cachedDates[videoId]) {
+				return Promise.resolve(cachedDates[videoId]);
+			}
+
+			return fetch(apiUrl).then(response => response.json()).then(json => {
+				const dateCreated = new Date(json.items[0].snippet.publishedAt).toLocaleString('ru-RU', {
+					day: 'numeric',
+					month: 'numeric',
+					year: 'numeric',
+					hour: 'numeric',
+					minute: 'numeric',
+					second: 'numeric',
+					hour12: false,
+				}).replace(',', '')
+
+				cachedDates[videoId] = dateCreated;
+				localStorage.setItem(cacheKey, JSON.stringify(cachedDates));
+				return dateCreated;
+			}).catch()
+		}
+	}
+
+	function ShowVideoCountOnChannel() {
+		if (currentPage() != 'watch') return;
+
+		document.querySelector('#rt-videoCount')?.remove()
+
+		GetVideosCount().then(count => {
+			waitSelector('#upload-info #owner-sub-count, ytm-slim-owner-renderer .subhead', { stop_on_page_change: true }).then(el => {
+				el.insertAdjacentHTML('beforeend',
+					`<span class="date style-scope ytd-video-secondary-info-renderer" style="margin-right:5px;" id="rt-videoCount"> • <span>${count}</span> видео</span>`);
+			})
+		})
+
+		async function GetVideosCount() {
+			await new Promise(resolve => setTimeout(resolve, 500)) // Задержка что бы на странице успел обновиться channelId
+
+			const channelId = await getChannelId();
+			const cacheKey = 'videoCounts';
+			const apiUrl = `https://www.googleapis.com/youtube/v3/channels?part=statistics&id=${channelId}&key=${api}`;
+
+			const cachedCounts = JSON.parse(localStorage.getItem(cacheKey)) || {};
+
+			if (cachedCounts[channelId]) {
+				return Promise.resolve(cachedCounts[channelId]);
+			}
+
+			return fetch(apiUrl).then(response => response.json()).then(json => {
+				const videoCount = json.items[0].statistics.videoCount;
+
+				cachedCounts[channelId] = videoCount;
+				localStorage.setItem(cacheKey, JSON.stringify(cachedCounts));
+				return videoCount;
+			}).catch()
+		}
 	}
 
 	function FocusAndScrollFix(fix) {
@@ -975,7 +1039,7 @@
 		waitSelector(playerSelector).then(player => player.addEventListener('mouseenter', playerHoverHandler))
 
 		async function PlayerHover() {
-			if (isScrolling) return
+			if (currentPage() != 'watch' || isScrolling) return;
 			isScrolling = true
 			wheel = false
 
@@ -1337,41 +1401,6 @@
 				);
 			}
 		}, 1000 * 60 * 5); // 5 min
-	}
-
-	function ShowVideoCountOnChannel() {
-		if (currentPage() != 'watch') return;
-		const CACHE_PREFIX = 'retube-channel-videos-count:', SELECTOR_ID = 'retube-video-count'
-		waitSelector('#upload-info #owner-sub-count, ytm-slim-owner-renderer .subhead', { stop_on_page_change: true }).then(el => setVideoCount(el));
-
-		async function setVideoCount(container) {
-			document.querySelector('#rt-videoCount')?.remove()
-			await Delay(3000)
-			const channelId = getChannelId()
-			if (!channelId) return console.error('setVideoCount channelId: empty', channelId);
-			if (storage = sessionStorage.getItem(CACHE_PREFIX + channelId)) {
-				insertToHTML({ 'text': storage, 'container': container });
-			}
-			else {
-				fetch(`https://www.googleapis.com/youtube/v3/channels?part=statistics&id=${getChannelId()}&key=${api}`).then(response => response.json()).then(json => {
-					if (videoCount = json.items[0].statistics.videoCount) {
-
-						insertToHTML({ 'text': videoCount, 'container': container });
-						sessionStorage.setItem(CACHE_PREFIX + channelId, videoCount);
-					} else console.warn('API поменялось');
-				}).catch()
-			}
-			function insertToHTML({ text = '', container = required() }) {
-				if (!(container instanceof HTMLElement)) return console.error('container not HTMLElement:', container);
-				(document.getElementById(SELECTOR_ID) || (function () {
-					container.insertAdjacentHTML('beforeend',
-						`<span class="date style-scope ytd-video-secondary-info-renderer" style="margin-right:5px;" id="rt-videoCount"> • <span id="${SELECTOR_ID}">${text}</span> видео</span>`);
-					return document.getElementById(SELECTOR_ID);
-				})())
-					.textContent = text
-				container.title = `${text} видео`
-			}
-		}
 	}
 
 	function HotkeysAlwaysActive() {
@@ -1782,8 +1811,11 @@
 		const ts = Math.abs(+time_sec), d = ~~(ts / 86400), h = ~~((ts % 86400) / 3600), m = ~~((ts % 3600) / 60), s = ~~(ts % 60)
 		return (d ? `${d}d ` : '') + (h ? (d ? h.toString().padStart(2, '0') : h) + ':' : '') + (h ? m.toString().padStart(2, '0') : m) + ':' + s.toString().padStart(2, '0')
 	}
-	function getChannelId() {
+	async function getChannelId() {
 		const isChannelId = id => id && /UC([a-z0-9-_]{22})$/i.test(id);
+
+		await waitUntil(() => document.body.querySelector('ytd-watch-flexy')?.playerData?.videoDetails.channelId, 50);
+
 		let result = [
 			document.querySelector('meta[itemprop="channelId"][content]')?.content,
 			(document.body.querySelector('ytd-app')?.__data?.data?.response
@@ -1946,6 +1978,22 @@
 		const decimal = int + (int % 3 ? 1 : 0);
 		const value = Math.floor(num / 10 ** decimal);
 		return value * 10 ** decimal;
+	}
+	async function GetApiKey() {
+		const STORAGE_API_KEYS = 'YT_API_KEYS';
+		const YOUTUBE_API_KEYS = localStorage.hasOwnProperty(STORAGE_API_KEYS) ? JSON.parse(localStorage.getItem(STORAGE_API_KEYS)) : await getKeys();
+
+		async function getKeys() {
+			return await fetch('https://gist.githubusercontent.com/raingart/ff6711fafbc46e5646d4d251a79d1118/raw/youtube_api_keys.json').then(res => res.text()).then(keys => {
+				localStorage.setItem(STORAGE_API_KEYS, keys);
+				return JSON.parse(keys);
+			}).catch(error => {
+				localStorage.removeItem(STORAGE_API_KEYS);
+				throw error;
+			}).catch(reason => console.error('Ошибка получения API ключа:', reason));
+		}
+
+		return 'AIzaSy' + YOUTUBE_API_KEYS[0];
 	}
 	//#endregion
 })()
