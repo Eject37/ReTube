@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ReTube
 // @namespace 	http://tampermonkey.net/
-// @version      4.4.0
+// @version      4.5.0
 // @description ReTube
 // @author       Eject
 // @match        *://www.youtube.com/*
@@ -67,7 +67,8 @@
 	let RTUpdateCheck = await getSavedSetting('rt-updateCheck') ? true : await GM_getValue('rt-updateCheck') === undefined
 	//#endregion
 	//#region Переменные
-	const api = await GetApiKey(), userLanguage = GetUserLanguage()
+
+	let apiKeysArrayLength = 0, noValidApiKeys = false, userLanguage = GetUserLanguage(), apiKeyQueue = Promise.resolve() // Создаем очередь вызовов для ApiKey()
 	let playerHoverHandler, isScrolling = false, wheel = false
 	//#endregion
 
@@ -965,15 +966,15 @@
 		})
 
 		async function GetVideoDate() {
+			if (noValidApiKeys) return 'API ключи закончились';
+
 			const videoId = getVideoId();
 			const cacheKey = 'videoDates';
-			const apiUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${api}`;
 
 			const cachedDates = JSON.parse(localStorage.getItem(cacheKey)) || {};
+			if (cachedDates[videoId]) return Promise.resolve(cachedDates[videoId]);
 
-			if (cachedDates[videoId]) {
-				return Promise.resolve(cachedDates[videoId]);
-			}
+			const apiUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${await ApiKey()}`;
 
 			return fetch(apiUrl).then(response => response.json()).then(json => {
 				const dateCreated = new Date(json.items[0].snippet.publishedAt).toLocaleString('ru-RU', {
@@ -989,7 +990,10 @@
 				cachedDates[videoId] = dateCreated;
 				localStorage.setItem(cacheKey, JSON.stringify(cachedDates));
 				return dateCreated;
-			}).catch()
+			}).catch(() => {
+				CleanApiKeys();
+				return GetVideoDate();
+			})
 		}
 	}
 
@@ -1007,16 +1011,15 @@
 
 		async function GetVideosCount() {
 			await new Promise(resolve => setTimeout(resolve, 500)) // Задержка что бы на странице успел обновиться channelId
+			if (noValidApiKeys) return 'API ключи закончились';
 
 			const channelId = await getChannelId();
 			const cacheKey = 'videoCounts';
-			const apiUrl = `https://www.googleapis.com/youtube/v3/channels?part=statistics&id=${channelId}&key=${api}`;
 
 			const cachedCounts = JSON.parse(localStorage.getItem(cacheKey)) || {};
+			if (cachedCounts[channelId]) return Promise.resolve(cachedCounts[channelId]);
 
-			if (cachedCounts[channelId]) {
-				return Promise.resolve(cachedCounts[channelId]);
-			}
+			const apiUrl = `https://www.googleapis.com/youtube/v3/channels?part=statistics&id=${channelId}&key=${await ApiKey()}`;
 
 			return fetch(apiUrl).then(response => response.json()).then(json => {
 				const videoCount = json.items[0].statistics.videoCount;
@@ -1024,7 +1027,10 @@
 				cachedCounts[channelId] = videoCount;
 				localStorage.setItem(cacheKey, JSON.stringify(cachedCounts));
 				return videoCount;
-			}).catch()
+			}).catch(() => {
+				CleanApiKeys();
+				return GetVideosCount();
+			})
 		}
 	}
 
@@ -1429,8 +1435,10 @@
 		document.addEventListener('keyup', e => currentPage() == 'watch' && setFocus(e.target))
 		document.addEventListener('click', e => currentPage() == 'watch' && e.isTrusted && setFocus(e.target))
 		function setFocus(target) {
-			if (['input', 'textarea', 'select'].includes(target.localName) || target.isContentEditable || (target.classList.length > 0 && target.classList[0]?.includes('CodeMirror'))) return;
-			movie_player.focus({ preventScroll: true })
+			try {
+				if (['input', 'textarea', 'select'].includes(target.localName) || target.isContentEditable || (target.classList.length > 0 && target.classList[0]?.includes('CodeMirror'))) return;
+				movie_player.focus({ preventScroll: true })
+			} catch { }
 		}
 	}
 
@@ -1979,21 +1987,77 @@
 		const value = Math.floor(num / 10 ** decimal);
 		return value * 10 ** decimal;
 	}
+
+	// Основная функция для получения рабочего API-ключа
+	async function ApiKey() {
+		// Добавляем вызов в очередь
+		return apiKeyQueue = apiKeyQueue.then(async () => {
+			return await CheckApiKey() // Проверяем/получаем ключ
+		}).catch();
+	}
+
+	// Проверяет наличие валидного ключа или получает новый
+	async function CheckApiKey() {
+		const STORAGE_VALID_APIKEY = 'YOUTUBE_VALID_APIKEY'
+
+		// Если есть сохраненный валидный ключ - возвращаем его
+		if (localStorage.hasOwnProperty(STORAGE_VALID_APIKEY)) return localStorage.getItem(STORAGE_VALID_APIKEY);
+
+		// Получаем новый ключ из списка
+		return GetApiKey().then(key => {
+			if (noValidApiKeys) return; // Если ключи закончились
+
+			// Проверяем ключ через тестовый запрос к YouTube API
+			return fetch(`https://www.googleapis.com/youtube/v3/videos?id=dQw4w9WgXcQ&part=id&key=${key}`).then(response => {
+				if (response.ok) { // Если ключ рабочий
+					localStorage.setItem(STORAGE_VALID_APIKEY, key); // Сохраняем
+					return key;
+				}
+
+				return CheckApiKey() // Рекурсивно пробуем следующий ключ если предыдущий не рабочий
+			})
+		})
+	}
+
+	// Получает следующий API-ключ из списка
 	async function GetApiKey() {
-		const STORAGE_API_KEYS = 'YT_API_KEYS';
+		const STORAGE_API_KEYS = 'YOUTUBE_API_KEYS';
+		// Загружаем сохраненные ключи или получаем новые
 		const YOUTUBE_API_KEYS = localStorage.hasOwnProperty(STORAGE_API_KEYS) ? JSON.parse(localStorage.getItem(STORAGE_API_KEYS)) : await getKeys();
 
+		// Загрузка и подготовка списка ключей
 		async function getKeys() {
-			return await fetch('https://gist.githubusercontent.com/raingart/ff6711fafbc46e5646d4d251a79d1118/raw/youtube_api_keys.json').then(res => res.text()).then(keys => {
-				localStorage.setItem(STORAGE_API_KEYS, keys);
-				return JSON.parse(keys);
-			}).catch(error => {
+			return await fetch('https://raw.githubusercontent.com/Eject37/ReTube/refs/heads/main/Other/yt_api_keys.json').then(res => res.json()).then(keys => {
+				shuffleArray(keys); // Перемешиваем массив ключей
+				localStorage.setItem(STORAGE_API_KEYS, JSON.stringify(keys)); // Сохраняем
+				return keys;
+			}).catch(() => { // Обработка ошибок загрузки
 				localStorage.removeItem(STORAGE_API_KEYS);
-				throw error;
-			}).catch(reason => console.error('Ошибка получения API ключа:', reason));
+			});
 		}
 
-		return 'AIzaSy' + YOUTUBE_API_KEYS[0];
+		// Если все ключи проверены и не работают
+		if (apiKeysArrayLength >= YOUTUBE_API_KEYS.length) {
+			noValidApiKeys = true; // Флаг окончания ключей
+			localStorage.removeItem(STORAGE_API_KEYS); // Чистим хранилище что бы при обновлении вкладки заново получить ключи из github
+			return;
+		}
+
+		// Берем следующий ключ из массива
+		const apiKey = YOUTUBE_API_KEYS[apiKeysArrayLength];
+		apiKeysArrayLength++;
+		return 'AIzaSy' + apiKey;
+	}
+	function CleanApiKeys() {
+		localStorage.removeItem('YOUTUBE_API_KEYS');
+		localStorage.removeItem('YOUTUBE_VALID_APIKEY');
+	}
+	// Перемешивание массива
+	function shuffleArray(array) {
+		for (let i = array.length - 1; i > 0; i--) {
+			const j = Math.floor(Math.random() * (i + 1)); // случайный индекс
+			[array[i], array[j]] = [array[j], array[i]]; // меняем местами элементы
+		}
 	}
 	//#endregion
 })()
