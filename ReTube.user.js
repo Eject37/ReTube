@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ReTube
 // @namespace 	http://tampermonkey.net/
-// @version      4.5.0
+// @version      4.5.1
 // @description ReTube
 // @author       Eject
 // @match        *://www.youtube.com/*
@@ -716,7 +716,7 @@
 			'html[dark], [dark] {--yt-spec-static-overlay-background-heavy: var(--YT-videoTime-color); --yt-spec-static-overlay-background-solid: var(--YT-videoTime-color)}' + // Кнопка на видео добавить в смотреть позже + при наведении
 			'html[dark], [dark] {--yt-spec-static-overlay-background-brand: var(--YT-notificationsBadge-color)}' + // Кнопка/надпись на главной странице В эфире под видео
 			'#icon.ytd-reel-shelf-renderer path, #icon.ytd-rich-shelf-renderer path {fill: var( --YT-icon-color)}' + // Иконка YouTube Shorts на главной странице и в сайдбаре
-			'.tp-yt-paper-tooltip[style-target=tooltip], .ytp-tooltip-text {background-color: var(--YT-videoTime-color) !important; backdrop-filter: blur(10px)}' + // Задний цвет всплывающих подсказок (Нравится, Не нравится..)
+			'.tp-yt-paper-tooltip[style-target=tooltip], .ytp-tooltip-text {background-color: var(--YT-videoTime-color) !important; backdrop-filter: blur(10px); padding: 4px 8px; text-wrap: nowrap} .ytp-tooltip-bottom-text {background-color: transparent !important}' + // Задний цвет всплывающих подсказок (Нравится, Не нравится..)
 			'html[dark] {--yt-live-chat-banner-gradient-scrim: linear-gradient(var(--YT-hover-and-dateVideoLoad-color), transparent )}' + // Градиент в чате ютуба закрепленного сообщения
 			'#top-level-buttons-computed #segmented-dislike-button ytd-toggle-button-renderer *[aria-pressed="true"] yt-icon {color: rgb(249 137 137) !important}' + // Цвет кнопки дизлайка (нажатой)
 			'.html5-video-player[aria-label*="в "] {background: rgb(0, 0, 0)}' + // Цвет фона плеера в полном экране
@@ -742,6 +742,7 @@
 			'#button.ytd-topbar-menu-button-renderer {color: #fff !important}' + // Цвет иконки 'Создать видео'
 
 			// Красим всплывающую подсказку слева снизу (например при добавлении видео в смотреть позже)
+			'ytd-popup-container {z-index: 9999}' +
 			'tp-yt-paper-toast.yt-notification-action-renderer {background-color: var(--YT-additional-color); box-shadow: 0 0 10px var(--YT-additional-color)}' +
 			'#text.yt-notification-action-renderer, yt-notification-action-renderer[ui-refresh] #sub-text.yt-notification-action-renderer {color: var(--YT-text-color)}' +
 			'.yt-spec-button-shape-next--call-to-action-inverse.yt-spec-button-shape-next--text {color: var(--YT-link-color)}' +
@@ -750,7 +751,7 @@
 			'.ytp-offline-slate-bar {background: rgba(0, 0, 0, 0.4) !important; backdrop-filter: blur(15px) !important} .ytp-offline-slate-button {background: var(--YT-searchBorderHover-color) !important; border-radius: 15px !important}' +
 
 			// Полоса прогресса загрузки страницы вверху сайта
-			'yt-page-navigation-progress[enable-refresh-signature-moments-web] #progress.yt-page-navigation-progress {background: var(--YT-videoProgress-color)}' +
+			'#progress.yt-page-navigation-progress {background: var(--YT-videoProgress-color)}' +
 
 			// Shorts
 			'#cinematic-shorts-scrim {display: none}' +
@@ -1004,6 +1005,7 @@
 
 		GetVideosCount().then(count => {
 			waitSelector('#upload-info #owner-sub-count, ytm-slim-owner-renderer .subhead', { stop_on_page_change: true }).then(el => {
+				document.querySelector('#rt-videoCount')?.remove()
 				el.insertAdjacentHTML('beforeend',
 					`<span class="date style-scope ytd-video-secondary-info-renderer" style="margin-right:5px;" id="rt-videoCount"> • <span>${count}</span> видео</span>`);
 			})
@@ -1045,7 +1047,7 @@
 		waitSelector(playerSelector).then(player => player.addEventListener('mouseenter', playerHoverHandler))
 
 		async function PlayerHover() {
-			if (currentPage() != 'watch' || isScrolling) return;
+			if (currentPage() != 'watch' || isScrolling || document.querySelector('.ytSearchboxComponentInputBoxHasFocus')) return;
 			isScrolling = true
 			wheel = false
 
@@ -1476,7 +1478,7 @@
 		const inputText = () => document.querySelector('.YtSearchboxComponentInput, .ytSearchboxComponentInput, input.ytd-searchbox').value.trim()
 		const searchButton = '.YtSearchboxComponentSearchButton, .ytSearchboxComponentSearchButton, #search-icon-legacy'
 		const searchSuggestion = '.sbsb_c.gsfs:not(.done), .YtSearchboxComponentSuggestionsContainer > .YtSuggestionComponentSuggestion:not(.done), .ytSearchboxComponentSuggestionsContainer > .ytSuggestionComponentSuggestion:not(.done)'
-		const suggestionText = '.sbpqs_a, .YtSuggestionComponentLeftContainer .YtSuggestionComponentBold, .ytSuggestionComponentLeftContainer .ytSuggestionComponentBold'
+		const suggestionText = '.ytSuggestionComponentText'
 		suggEl()
 
 		waitSelector(searchButton).then(btn => {
@@ -1515,7 +1517,7 @@
 					e.preventDefault()
 					e.stopImmediatePropagation()
 
-					const text = el.querySelector(suggestionText).textContent
+					const text = el.querySelector(suggestionText).attributes['aria-label'].value
 					GM_openInTab(`${location.origin}/results?search_query=${encodeURIComponent(text).replace(/%20/gu, '+')}`, true)
 				})
 
