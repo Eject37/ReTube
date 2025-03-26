@@ -9,7 +9,7 @@
 </br>
 </br>
 Открыть меню: F2</br></br>
-<image src="https://i.imgur.com/SqO2vu2.jpg" style="width: 90%"/>
+<image src="https://i.imgur.com/4pn6ytA.jpeg" style="width: 70%"/>
 
 <img alt="GitHub Downloads (specific asset, all releases)" src="https://img.shields.io/github/downloads/Eject37/ReTube/ReTube.user.js?label=%D0%9A%D0%BE%D0%BB-%D0%B2%D0%BE%20%D1%81%D0%BA%D0%B0%D1%87%D0%B8%D0%B2%D0%B0%D0%BD%D0%B8%D0%B9&color=blue">
 
