@@ -1,10 +1,11 @@
+**[Установить последнюю версию](https://github.com/Eject37/ReTube/raw/main/ReTube.user.js)</br>**
 [Discord сервер](https://discord.gg/8baJSRxXSm)
 
 **Поддержка скрипта временно приостановлена, обновления будут только по возможности.**
 
-Установка возможна любым менеджером скриптов, например [Violentmonkey](https://violentmonkey.github.io/get-it/)
+Установка возможна любым менеджером скриптов, например [Violentmonkey](https://violentmonkey.github.io/get-it/), в Tampermonkey встречаются проблемы
 </br>
-Работа в браузерах не на Chromium не гарантируется
+Работа гарантируется только в браузерах на движке Chromium
 </br>
 </br>
 Открыть меню: F2</br></br>
