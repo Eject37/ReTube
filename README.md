@@ -1,4 +1,5 @@
 **[Установить последнюю версию](https://github.com/Eject37/ReTube/raw/main/ReTube.user.js)</br>**
+[Поддержать разработку](https://eject37.github.io/)</br>
 [Discord сервер](https://discord.gg/8baJSRxXSm)
 
 **Поддержка скрипта временно приостановлена, обновления будут только по возможности.**
