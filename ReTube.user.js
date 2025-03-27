@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ReTube
 // @namespace 	http://tampermonkey.net/
-// @version      4.5.1
+// @version      4.5.2
 // @description ReTube
 // @author       Eject
 // @match        *://www.youtube.com/*
@@ -80,8 +80,8 @@
 	}
 
 	// Обходим внедрение HTML кода
-	try { document.head.insertAdjacentHTML('beforeend', '<trusted-test></trusted-test>'); }
-	catch { try { trustedTypes.createPolicy('default', { createHTML: input => input }); } catch { } }
+	if (window.trustedTypes)
+		try { trustedTypes.createPolicy('default', { createHTML: input => input }); } catch { }
 
 	if (RTanimateLoad) {
 		waitSelector('head').then(() => {
@@ -157,7 +157,7 @@
 				return
 			}
 
-			//#region Стили
+			//#region Стили меню
 			pushCSS(`#retube-menu {animation: 0.3s show ease; background-color: rgb(37 37 45 / 36%); position: fixed; z-index: 999999; backdrop-filter: blur(10px); filter: drop-shadow(0 0 3px rgba(100,110,115,0.6)); border-radius: 7px} @keyframes show { from { opacity: 0; } to { opacity: 1; } }` +
 				'.retube-label {font-size: 18px; color: rgb(201 208 211); font-family: "YouTube Sans"; padding-right: 4px; -webkit-user-select: none;} .retube-label:not(.info):hover {background: rgba(120 125 130 / 15%); border-radius: 6px}' +
 				'.retube-additionalDiv:not(.color) {margin-left: 18px}' +
@@ -181,9 +181,7 @@
 				'.retube-label > input {accent-color: #9ba8c2} .retube-label > .important {accent-color: #7fa682}'
 				, 'retube-menu-style')
 			//#endregion
-
 			//#region Основа меню
-
 			document.querySelector('body').insertAdjacentHTML('beforeend', '<div id="retube-menu"></div>')
 			document.querySelector('#retube-menu').insertAdjacentHTML('beforeend', '<div id="rt-head"><span class="retube-label rt-label-head">ReTube</span><span id="rt-close-head"><img src="https://i.imgur.com/ibUUDqp.png" style="width: 21px; margin-right: 4px" id="rt-closeImg-head" /></span></div>')
 			document.querySelector('#retube-menu').insertAdjacentHTML('beforeend', '<div id="rt-tabs"><button class="rt-button-tab" data-tab="1"><img src="https://i.imgur.com/UW7uxaH.png" class="img-tab-icon" style="width: 27px; height: 27px;" /><span class="rt-label-tabs">Главная</span></button><button class="rt-button-tab" data-tab="2"><img src="https://i.imgur.com/PQ9b4Ke.png" class="img-tab-icon" /><span class="rt-label-tabs">Цвета</span></button><button class="rt-button-tab" data-tab="3"><img src="https://i.imgur.com/fKkwgP1.png" class="img-tab-icon" /><span class="rt-label-tabs">Инфо</span></button></div>')
@@ -191,7 +189,6 @@
 			document.querySelector('#retube-menu').insertAdjacentHTML('beforeend', '<div id="retube-tab2"></div>')
 			document.querySelector('#retube-menu').insertAdjacentHTML('beforeend', '<div id="retube-tab3"></div>')
 			//#endregion
-
 			//#region Таб Главная
 			document.querySelector('#retube-tab1').insertAdjacentHTML('beforeend', '<div id="rt-settings-tabs"><button class="rt-button-tab rt-button-settings-tab" data-settingsTab="1"><img src="https://i.imgur.com/l8f9xhj.png" class="img-tab-icon" style="width: 22px; height: 22px;" /><span class="rt-label-settings-tabs">Основные</span></button><button class="rt-button-tab rt-button-settings-tab" data-settingsTab="2"><img src="https://i.imgur.com/jCyfm4a.png" class="img-tab-icon" style="width: 22px; height: 22px;" /><span class="rt-label-settings-tabs">Другие</span></button></div>')
 			document.querySelector('#retube-tab1').insertAdjacentHTML('beforeend', '<div id="retube-settings-tab1"></div>')
@@ -227,13 +224,12 @@
 			document.querySelector('#retube-settings-tab2').insertAdjacentHTML('beforeend', '<div><label class="retube-label" retube-tooltip="Правый клик: стандартная скорость||Колесо: регулировка скорости на 0.1x"><input type="checkbox" id="rt-checkbox21"></input>Изменение скорости видео на кнопке \'Настройки\'</label></div>')
 			document.querySelector('#retube-settings-tab2').insertAdjacentHTML('beforeend', `<div><label class="retube-label"><input type="checkbox" id="rt-checkbox23"></input>Принудительная громкость видео при запуске</label><select id="rt-selectDefaultVolume" class="rt-select" ${RTDefaultVolume ? '' : ' hidden'}><option value="100">100%</option><option value="80">80%</option><option value="70">70%</option><option value="60">60%</option><option value="50">50%</option><option value="40">40%</option><option value="30">30%</option><option value="20">20%</option><option value="10">10%</option><option value="5">5%</option><option value="1">1%</option><option value="0">0%</option></select></div>`)
 
-			document.querySelector('#retube-settings-tab2').insertAdjacentHTML('beforeend', '<br/><div><label class="retube-label"><input type="checkbox" id="rt-checkbox22" class="important"></input>Автоматическая проверка обновлений скрипта</label></div>')
+			document.querySelector('#retube-settings-tab2').insertAdjacentHTML('beforeend', '<br><div><label class="retube-label"><input type="checkbox" id="rt-checkbox22" class="important"></input>Автоматическая проверка обновлений скрипта</label></div>')
 
-			document.querySelector('#retube-tab1').insertAdjacentHTML('beforeend', '<br/><button class="retube-button retube-button-save">Сохранить</button>')
+			document.querySelector('#retube-tab1').insertAdjacentHTML('beforeend', '<br><button class="retube-button retube-button-save">Сохранить</button>')
 			//#endregion
 			//#region Таб Цвета
 			document.querySelector('#retube-tab2').insertAdjacentHTML('beforeend', `<div><label class="retube-label" retube-tooltip="Для корректной работы, тема||ютуба должна быть тёмной"><input type="checkbox" id="rt-checkboxMain"></input>Перекрасить YouTube</label><select id="rt-selectRTColors" class="rt-select"${RTcolors ? '' : ' hidden'}><option value="default">ReTube</option><option value="defaultDark">ReTube Dark</option><option value="dark">Тёмный</option><option value="purple">Пурпурный</option><option value="green">Зелёный</option><option value="custom">Свои цвета</option></select></div>`)
-			//document.querySelector('#retube-tab2').insertAdjacentHTML('beforeend', `<div class="rt-colorYTMain retube-additionalDiv color"${RTcolors ? '' : ' hidden'} style="margin-bottom: 5px; margin-top: 5px"><span class="retube-label info rt-title">YouTube</span><select id="rt-selectRTColors" class="rt-select"><option value="default">ReTube</option><option value="defaultDark">ReTube Dark</option><option value="purple">Пурпурный</option><option value="green">Зелёный</option><option value="custom">Свои цвета</option></select></div>`)
 
 			document.querySelector('#retube-tab2').insertAdjacentHTML('beforeend', `<div class="rt-colorYT retube-additionalDiv color"${RTcolors ? '' : ' hidden'}><label class="retube-label retube-label-additional">Основной<input type="color" id="rt-colorYTMain"></input></label><button class="retube-button retube-button-reset" onclick="const colorInput = document.querySelector('#rt-colorYTMain'); colorInput.value = '#1b222a'; colorInput.dispatchEvent(new Event('input', { bubbles: true }))"></button></div>`)
 			document.querySelector('#retube-tab2').insertAdjacentHTML('beforeend', `<div class="rt-colorYT retube-additionalDiv color"${RTcolors ? '' : ' hidden'}><label class="retube-label retube-label-additional">Дополнительный<input type="color" id="rt-colorYTAdditional"></input></label><button class="retube-button retube-button-reset" onclick="const colorInput = document.querySelector('#rt-colorYTAdditional'); colorInput.value = '#222b35'; colorInput.dispatchEvent(new Event('input', { bubbles: true }))"></button></div>`)
@@ -246,14 +242,15 @@
 			document.querySelector('#retube-tab2').insertAdjacentHTML('beforeend', `<div class="rt-colorWatched retube-additionalDiv color"${RTwatchedVideo ? '' : ' hidden'}><label class="retube-label retube-label-additional">Задний цвет надписи<input type="color" id="rt-color1"></input></label><button class="retube-button retube-button-reset" onclick="const colorInput = document.querySelector('#rt-color1'); colorInput.value = '#343a41'; colorInput.dispatchEvent(new Event('input', { bubbles: true }))"></button></div>`)
 			document.querySelector('#retube-tab2').insertAdjacentHTML('beforeend', `<div class="rt-colorWatched retube-additionalDiv color"${RTwatchedVideo ? '' : ' hidden'}><label class="retube-label retube-label-additional">Задний цвет<input type="color" id="rt-color2"></input></label><button class="retube-button retube-button-reset" onclick="const colorInput = document.querySelector('#rt-color2'); colorInput.value = '#ffffff'; colorInput.dispatchEvent(new Event('input', { bubbles: true }))"></button></div>`)
 
-			document.querySelector('#retube-tab2').insertAdjacentHTML('beforeend', '<br/><button class="retube-button retube-button-save">Сохранить</button>')
+			document.querySelector('#retube-tab2').insertAdjacentHTML('beforeend', '<br><button class="retube-button retube-button-save">Сохранить</button>')
 			//#endregion
 			//#region Таб Инфо
-			document.querySelector('#retube-tab3').insertAdjacentHTML('beforeend', `<br/><div class="retube-label info" style="text-align: center; font-size: 24px; font-weight: bold">ReTube v${GM_info.script.version}</div>`)
+			document.querySelector('#retube-tab3').insertAdjacentHTML('beforeend', `<br><div class="retube-label info" style="text-align: center; font-size: 24px; font-weight: bold">ReTube v${GM_info.script.version}</div>`)
 			document.querySelector('#retube-tab3').insertAdjacentHTML('beforeend', '<div class="retube-label info" style="text-align: center;">Разработчик скрипта: Сергей (Eject)</div>')
-			document.querySelector('#retube-tab3').insertAdjacentHTML('beforeend', '<div><br/><button class="retube-button retube-button-discord" onclick="window.open(`https://github.com/Eject37`)">Мои работы</button></div>')
-			document.querySelector('#retube-tab3').insertAdjacentHTML('beforeend', '<div><button class="retube-button retube-button-github" onclick="window.open(`https://discord.gg/8baJSRxXSm`)">Мой Discord сервер</button></div>')
-			document.querySelector('#retube-tab3').insertAdjacentHTML('beforeend', '<div><br/><button class="retube-button retube-button-hardReset">Сбросить ВСЕ настройки ReTube</button></div>')
+			document.querySelector('#retube-tab3').insertAdjacentHTML('beforeend', '<div><br><button class="retube-button retube-button-github" onclick="window.open(`https://eject37.github.io`)">Мои работы</button></div>')
+			document.querySelector('#retube-tab3').insertAdjacentHTML('beforeend', '<div><button class="retube-button retube-button-discord" onclick="window.open(`https://discord.gg/8baJSRxXSm`)">Мой Discord сервер</button></div>')
+			document.querySelector('#retube-tab3').insertAdjacentHTML('beforeend', '<div><br><button class="retube-button retube-button-github" onclick="window.open(`https://eject37.github.io`)">Поддержать разработку (RU, UA card, USDT)</button></div>')
+			document.querySelector('#retube-tab3').insertAdjacentHTML('beforeend', '<div><br><button class="retube-button retube-button-hardReset">Сбросить ВСЕ настройки ReTube</button></div>')
 			//#endregion
 
 			//#region Переключение табов
@@ -813,7 +810,9 @@
 			'.sparkles-light-cta, ytd-feed-nudge-renderer, .ytp-pause-overlay-container {display: none !important}' +
 
 			// Кнопка Аннотации и Автовыключение в настройках видео
-			'.ytp-settings-menu .ytp-panel-menu > .ytp-menuitem[role="menuitemcheckbox"], .ytp-settings-menu .ytp-panel-menu > .ytp-menuitem:has(path[d^="M16.67,4.31C19"]) {display: none !important}'
+			'.ytp-settings-menu .ytp-panel-menu > .ytp-menuitem[role="menuitemcheckbox"], .ytp-settings-menu .ytp-panel-menu > .ytp-menuitem:has(path[d^="M16.67,4.31C19"]) {display: none !important}' +
+
+			'ytd-rich-section-renderer:has(a[href^="/premium/"])' // На главной странице, реклама с предложением подписаться на yt music премиум
 			, 'rt-hideTrashStyle')
 
 		// Скрываем кнопки под видео
