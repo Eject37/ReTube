@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ReTube
 // @namespace 	http://tampermonkey.net/
-// @version      4.5.2
+// @version      4.5.3
 // @description ReTube
 // @author       Eject
 // @match        *://www.youtube.com/*
@@ -659,7 +659,7 @@
 			return
 		}
 
-		pushCSS(`:root {--YT-main-color: ${RTColorYTMain}; --YT-additional-color: ${RTColorYTAdditional}; --YT-hover-and-dateVideoLoad-color: ${ModifyColor(RTColorYTAdditional, 4, 4, 4)};` +
+		pushCSS(`:root {--YT-main-color: ${RTColorYTMain}; --YT-main-color-transparent: ${RTColorYTMain + 'CC'}; --YT-additional-color: ${RTColorYTAdditional}; --YT-hover-and-dateVideoLoad-color: ${ModifyColor(RTColorYTAdditional, 4, 4, 4)};` +
 			`--YT-hoverVideoButton-color: ${ModifyColor(RTColorYTAdditional, 11, 12, 13)}; --YT-text-color: ${RTColorYTText}; --YT-overlayMenu-color: ${ModifyColor(RTColorYTAdditional, 5, 4, 3)}ba;` +
 			`--YT-hoverAndPanels2-color: ${ModifyColor(RTColorYTAdditional, 14, 15, 15)}; --YT-link-color: ${RTColorYTLink}; --YT-icon-inactive: ${ModifyColor(RTColorYTText, -25, -23, -15)};` +
 			`--YT-searchBorder-color: ${ModifyColor(RTColorYTAdditional, 62, 60, 70)}42; --YT-searchBorderHover-color: ${ModifyColor(RTColorYTAdditional, 92, 90, 100)}42;` +
@@ -762,7 +762,10 @@
 			'.ytd-masthead button:has(path[d^="M20 12h"]) > .yt-spec-button-shape-next__icon {margin-right: -10px; margin-left: -10px; color: white}' +
 
 			// Кружок на полосе прогресса видео (отображать только при наведении)
-			'.ytp-progress-bar-container:not(:hover) .ytp-scrubber-button {display: none}'
+			'.ytp-progress-bar-container:not(:hover) .ytp-scrubber-button {display: none}' +
+
+			// Шапка на новом дизайне, размытие
+			'#frosted-glass.with-chipbar.ytd-app {background: var(--YT-main-color-transparent)}'
 			, 'rt-paint')
 
 		// --yt-spec-text-secondary: #aaa
@@ -812,7 +815,7 @@
 			// Кнопка Аннотации и Автовыключение в настройках видео
 			'.ytp-settings-menu .ytp-panel-menu > .ytp-menuitem[role="menuitemcheckbox"], .ytp-settings-menu .ytp-panel-menu > .ytp-menuitem:has(path[d^="M16.67,4.31C19"]) {display: none !important}' +
 
-			'ytd-rich-section-renderer:has(a[href^="/premium/"])' // На главной странице, реклама с предложением подписаться на yt music премиум
+			'ytd-rich-section-renderer:has(a[href^="/premium/"]) {display: none !important}' // На главной странице, реклама с предложением подписаться на yt music премиум
 			, 'rt-hideTrashStyle')
 
 		// Скрываем кнопки под видео
@@ -1216,7 +1219,6 @@
 	function RemainingTime() {
 		const SELECTOR_ID = 'retube-player-time-remaining'
 		waitSelector('.ytp-time-duration, ytm-time-display .time-display-content').then(container => {
-			const movie_player = document.querySelector('#movie_player')
 			waitSelector('video').then(video => {
 				video.addEventListener('timeupdate', setRemaining.bind(video))
 				video.addEventListener('ratechange', setRemaining.bind(video))
