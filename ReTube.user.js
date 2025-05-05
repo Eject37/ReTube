@@ -440,7 +440,10 @@
 				document.querySelectorAll('.ytd-search #progress.ytd-thumbnail-overlay-resume-playback-renderer').forEach(x => x.style.setProperty('--background-color', e.target.value + '80'))
 			})
 
-			colorMain.addEventListener('input', debounce(e => document.documentElement.style.setProperty('--YT-main-color', e.target.value), 20))
+			colorMain.addEventListener('input', debounce(e => {
+				document.documentElement.style.setProperty('--YT-main-color', e.target.value)
+				document.documentElement.style.setProperty('--YT-main-color-transparent', e.target.value + 'cc')
+			}, 20))
 			colorAdditional.addEventListener('input', debounce(e => {
 				document.documentElement.style.setProperty('--YT-additional-color', e.target.value)
 				document.documentElement.style.setProperty('--YT-hover-and-dateVideoLoad-color', ModifyColor(e.target.value, 4, 4, 4))
