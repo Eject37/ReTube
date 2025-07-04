@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ReTube
 // @namespace 	http://tampermonkey.net/
-// @version      4.5.3
+// @version      4.5.4
 // @description ReTube
 // @author       Eject
 // @match        *://www.youtube.com/*
@@ -768,7 +768,13 @@
 			'.ytp-progress-bar-container:not(:hover) .ytp-scrubber-button {display: none}' +
 
 			// Шапка на новом дизайне, размытие
-			'#frosted-glass.with-chipbar.ytd-app {background: var(--YT-main-color-transparent)}'
+			'#frosted-glass.with-chipbar.ytd-app, ytd-masthead[frosted-glass-mode=without-chipbar] #background.ytd-masthead {background: var(--YT-main-color-transparent)}' +
+
+			// Скрываем точки (действие с видео) в плейлистах до наведения на видео (было когда-то по умолчанию)
+			'ytd-playlist-video-renderer:not(:hover) #menu {display: none}' +
+
+			// Задняя панель где таймкоды эпизодов видео в панели справа
+			'#time.ytd-macro-markers-list-item-renderer {background-color: var(--YT-hoverAndPanels2-color) !important}'
 			, 'rt-paint')
 
 		// --yt-spec-text-secondary: #aaa
@@ -817,8 +823,8 @@
 
 			// Кнопка Аннотации и Автовыключение в настройках видео
 			'.ytp-settings-menu .ytp-panel-menu > .ytp-menuitem[role="menuitemcheckbox"], .ytp-settings-menu .ytp-panel-menu > .ytp-menuitem:has(path[d^="M16.67,4.31C19"]) {display: none !important}' +
-
-			'ytd-rich-section-renderer:has(a[href^="/premium/"]) {display: none !important}' // На главной странице, реклама с предложением подписаться на yt music премиум
+			'ytd-rich-section-renderer:has(a[href^="/premium/"]) {display: none !important}' +  // На главной странице, реклама с предложением подписаться на yt music премиум
+			'#newness-dot {display: none !important}' // Убирает точки новых видео на левой панели
 			, 'rt-hideTrashStyle')
 
 		// Скрываем кнопки под видео
@@ -939,7 +945,8 @@
 			'.truncated-text-wiz--medium-text .truncated-text-wiz__absolute-button, yt-formatted-string.ytd-menu-service-item-download-renderer, ' +
 			'.more-button.ytd-comment-view-model, .less-button.ytd-comment-view-model, .YtChipShapeChip, ytd-thumbnail-overlay-bottom-panel-renderer, ' +
 			'ytd-thumbnail-overlay-toggle-button-renderer[use-expandable-tooltip] #label.ytd-thumbnail-overlay-toggle-button-renderer, .ShortsLockupViewModelHostOutsideMetadataTitle,' +
-			'ytd-thumbnail-overlay-hover-text-renderer {font-family: "Ubuntu Light Custom" !important}' +
+			'ytd-thumbnail-overlay-hover-text-renderer, .ytChipShapeChip, .shortsLockupViewModelHostOutsideMetadataTitle, .shortsLockupViewModelHostMetadataSubhead,' +
+			'.ytChipShapeText {font-family: "Ubuntu Light Custom" !important}' +
 
 			'ytd-watch-metadata[title-headline-xs] h1.ytd-watch-metadata {font-family: "YouTube Sans"; font-weight: 600}'
 			, 'rt-betterFontStyle')
@@ -1051,8 +1058,8 @@
 		playerHoverHandler = PlayerHover
 		waitSelector(playerSelector).then(player => player.addEventListener('mouseenter', playerHoverHandler))
 
-		async function PlayerHover() {
-			if (currentPage() != 'watch' || isScrolling || document.querySelector('.ytSearchboxComponentInputBoxHasFocus')) return;
+		async function PlayerHover(evt) {
+			if (currentPage() != 'watch' || isScrolling || document.querySelector('.ytSearchboxComponentInputBoxHasFocus') || (evt.relatedTarget instanceof Element && evt.relatedTarget.matches('.ytp-caption-segment'))) return;
 			isScrolling = true
 			wheel = false
 
