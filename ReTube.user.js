@@ -2,7 +2,7 @@
 // @name         ReTube
 // @namespace 	http://tampermonkey.net/
 // @version      4.5.5
-// @description ReTube - Merged with Youtube Remember Speed
+// @description ReTube
 // @author       Eject
 // @match        *://www.youtube.com/*
 // @match        *://music.youtube.com/*
