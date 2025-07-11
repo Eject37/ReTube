@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ReTube
 // @namespace 	http://tampermonkey.net/
-// @version      4.5.4
+// @version      4.5.5
 // @description ReTube
 // @author       Eject
 // @match        *://www.youtube.com/*
@@ -44,6 +44,8 @@
 	let RTtranslateCommentButton = await getSavedSetting('rt-translateCommentButton')
 	let RTscrollSpeed = await getSavedSetting('rt-scrollSpeed')
 	let RTDefaultVolume = await getSavedSetting('rt-defaultVolume')
+	let RTRememberSpeed = await getSavedSetting('rt-rememberSpeed')
+	let RTRememberSpeedBypass = await getSavedSetting('rt-rememberSpeedBypass')
 
 	let RTSettingsDateOnVideoBackgroundChange = await getSavedSetting('rt-settings-dateOnVideoBackgroundChange')
 	let RTColorWatchedLabelBackground = await GM_getValue('rt-color-watchedLabelBackground') ?? '#343a41'
@@ -60,6 +62,7 @@
 	let RTSelectVideoQuality = await GM_getValue('rt-select-videoQuality') ?? 'hd1440'
 	let RTSelectTitleIconColor = await GM_getValue('rt-select-title-icon-color') ?? 'blue'
 	let RTDefaultVolumeLevel = await GM_getValue('rt-select-defaultVolumeLevel') ?? '30'
+	let RTSelectRememberSpeedLevel = await GM_getValue('rt-select-rememberSpeedLevel') ?? '1'
 
 	let RTHeadTop = await GM_getValue('rt-head-top') ?? '100px'
 	let RTHeadLeft = await GM_getValue('rt-head-left') ?? '100px'
@@ -123,6 +126,7 @@
 		if (RTmiddleClickSearch) MiddleClickSearch()
 		if (RTtranslateCommentButton) TranslateCommentButton()
 		if (RTscrollSpeed) ScrollSpeed()
+		if (RTRememberSpeed) RememberSpeed()
 
 		if (RTcolors) PaintYouTube(true)
 		if (RTbetterFont) ImproveFont(true)
@@ -223,6 +227,9 @@
 			document.querySelector('#retube-settings-tab2').insertAdjacentHTML('beforeend', '<div><label class="retube-label" retube-tooltip="https://i.imgur.com/PyJ1GvF.png"><input type="checkbox" id="rt-checkbox20"></input>Добавить кнопку перевода комментариев</label></div>')
 			document.querySelector('#retube-settings-tab2').insertAdjacentHTML('beforeend', '<div><label class="retube-label" retube-tooltip="Правый клик: стандартная скорость||Колесо: регулировка скорости на 0.1x"><input type="checkbox" id="rt-checkbox21"></input>Изменение скорости видео на кнопке \'Настройки\'</label></div>')
 			document.querySelector('#retube-settings-tab2').insertAdjacentHTML('beforeend', `<div><label class="retube-label"><input type="checkbox" id="rt-checkbox23"></input>Принудительная громкость видео при запуске</label><select id="rt-selectDefaultVolume" class="rt-select" ${RTDefaultVolume ? '' : ' hidden'}><option value="100">100%</option><option value="80">80%</option><option value="70">70%</option><option value="60">60%</option><option value="50">50%</option><option value="40">40%</option><option value="30">30%</option><option value="20">20%</option><option value="10">10%</option><option value="5">5%</option><option value="1">1%</option><option value="0">0%</option></select></div>`)
+			// pull request
+			document.querySelector('#retube-settings-tab2').insertAdjacentHTML('beforeend', `<div><label class="retube-label"><input type="checkbox" id="rt-checkbox24"></input>Принудительная скорость видео при запуске</label><select id="rt-selectRememberSpeed" class="rt-select" ${RTRememberSpeed ? '' : ' hidden'}></select></div>`)
+			document.querySelector('#retube-settings-tab2').insertAdjacentHTML('beforeend', `<div class="rt-rememberSpeedBypassDiv retube-additionalDiv"${RTRememberSpeed ? '' : ' hidden'}><label class="retube-label" retube-tooltip="Позволяет выбирать нестандартные значения||скорости, но может работать нестабильно"><input type="checkbox" id="rt-checkboxRememberSpeedBypass"></input>Разрешить нестандартные значения</label></div>`)
 
 			document.querySelector('#retube-settings-tab2').insertAdjacentHTML('beforeend', '<br><div><label class="retube-label"><input type="checkbox" id="rt-checkbox22" class="important"></input>Автоматическая проверка обновлений скрипта</label></div>')
 
@@ -249,7 +256,7 @@
 			document.querySelector('#retube-tab3').insertAdjacentHTML('beforeend', '<div class="retube-label info" style="text-align: center;">Разработчик скрипта: Сергей (Eject)</div>')
 			document.querySelector('#retube-tab3').insertAdjacentHTML('beforeend', '<div><br><button class="retube-button retube-button-github" onclick="window.open(`https://eject37.github.io`)">Мои работы</button></div>')
 			document.querySelector('#retube-tab3').insertAdjacentHTML('beforeend', '<div><button class="retube-button retube-button-discord" onclick="window.open(`https://discord.gg/8baJSRxXSm`)">Мой Discord сервер</button></div>')
-			document.querySelector('#retube-tab3').insertAdjacentHTML('beforeend', '<div><br><button class="retube-button retube-button-github" onclick="window.open(`https://eject37.github.io`)">Поддержать разработку (RU, UA card, USDT)</button></div>')
+			document.querySelector('#retube-tab3').insertAdjacentHTML('beforeend', '<div><br><button class="retube-button retube-button-github" onclick="window.open(`https://eject37.github.io`)">Поддержать разработку (RU, UA card)</button></div>')
 			document.querySelector('#retube-tab3').insertAdjacentHTML('beforeend', '<div><br><button class="retube-button retube-button-hardReset">Сбросить ВСЕ настройки ReTube</button></div>')
 			//#endregion
 
@@ -317,6 +324,8 @@
 			const checkbox21 = document.querySelector('#rt-checkbox21')
 			const checkbox22 = document.querySelector('#rt-checkbox22')
 			const checkbox23 = document.querySelector('#rt-checkbox23')
+			const checkbox24 = document.querySelector('#rt-checkbox24') // pull request
+			const checkboxRememberSpeedBypass = document.querySelector('#rt-checkboxRememberSpeedBypass') // pull request
 			const checkboxSettings1 = document.querySelector('#rt-checkboxSettingsDateOnVideoBackground')
 			const color1 = document.querySelector('#rt-color1')
 			const color2 = document.querySelector('#rt-color2')
@@ -332,6 +341,7 @@
 			const selectVideoQuality = document.querySelector('#rt-selectVideoQuality')
 			const selectTitleIconColor = document.querySelector('#rt-selectTitleIconColor')
 			const selectDefaultVolume = document.querySelector('#rt-selectDefaultVolume')
+			const selectRememberSpeed = document.querySelector('#rt-selectRememberSpeed') // pull request
 
 			checkboxMain.checked = RTcolors
 			checkboxAnimateLoad.checked = RTanimateLoad
@@ -359,6 +369,8 @@
 			checkbox21.checked = RTscrollSpeed
 			checkbox22.checked = RTUpdateCheck
 			checkbox23.checked = RTDefaultVolume
+			checkbox24.checked = RTRememberSpeed // pull request
+			checkboxRememberSpeedBypass.checked = RTRememberSpeedBypass // pull request
 			checkboxSettings1.checked = RTSettingsDateOnVideoBackgroundChange
 			color1.value = RTColorWatchedLabelBackground
 			color2.value = RTColorWatchedBackground
@@ -374,6 +386,33 @@
 			selectVideoQuality.value = RTSelectVideoQuality
 			selectTitleIconColor.value = RTSelectTitleIconColor
 			selectDefaultVolume.value = RTDefaultVolumeLevel
+
+			// pull request
+			function populateSpeedSelect(isBypass) {
+				selectRememberSpeed.innerHTML = '';
+				const standardSpeeds = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
+				const granularSpeeds = [];
+				for (let i = 0.25; i <= 4; i += 0.125) {
+					granularSpeeds.push(Number(i.toPrecision(15)));
+				}
+				const speedList = isBypass ? granularSpeeds : standardSpeeds;
+
+				speedList.forEach(speed => {
+					const option = document.createElement('option');
+					option.value = speed;
+					option.textContent = `${speed}x`;
+					selectRememberSpeed.appendChild(option);
+				});
+
+				if (!speedList.map(String).includes(String(RTSelectRememberSpeedLevel))) {
+					const option = document.createElement('option');
+					option.value = RTSelectRememberSpeedLevel;
+					option.textContent = `${RTSelectRememberSpeedLevel}x (свой)`;
+					selectRememberSpeed.appendChild(option);
+				}
+				selectRememberSpeed.value = RTSelectRememberSpeedLevel;
+			}
+			populateSpeedSelect(checkboxRememberSpeedBypass.checked);
 
 			document.querySelectorAll('.retube-button-save').forEach(x => x.addEventListener('click', function () {
 				GM_setValue('rt-colors', checkboxMain.checked ? 'true' : 'false')
@@ -401,6 +440,8 @@
 				GM_setValue('rt-translateCommentButton', checkbox20.checked ? 'true' : 'false')
 				GM_setValue('rt-scrollSpeed', checkbox21.checked ? 'true' : 'false')
 				GM_setValue('rt-defaultVolume', checkbox23.checked ? 'true' : 'false')
+				GM_setValue('rt-rememberSpeed', checkbox24.checked ? 'true' : 'false') // pull request
+				GM_setValue('rt-rememberSpeedBypass', checkboxRememberSpeedBypass.checked ? 'true' : 'false') // pull request
 
 				GM_setValue('rt-updateCheck', checkbox22.checked ? 'true' : 'false')
 
@@ -419,6 +460,7 @@
 				GM_setValue('rt-select-videoQuality', selectVideoQuality.value)
 				GM_setValue('rt-select-title-icon-color', selectTitleIconColor.value)
 				GM_setValue('rt-select-defaultVolumeLevel', selectDefaultVolume.value)
+				GM_setValue('rt-select-rememberSpeedLevel', selectRememberSpeed.value)
 
 				GM_setValue('rt-head-top', document.querySelector('#retube-menu').style.top)
 				GM_setValue('rt-head-left', document.querySelector('#retube-menu').style.left)
@@ -498,6 +540,27 @@
 			checkbox18.addEventListener('change', e => { if (e.target.checked) ScrollVolume() })
 			checkbox21.addEventListener('change', e => { if (e.target.checked) ScrollSpeed() })
 			checkbox23.addEventListener('change', e => (RTDefaultVolume = e.target.checked, ForceDefaultVideoVolume(e.target.checked), selectDefaultVolume.toggleAttribute('hidden', !e.target.checked)));
+
+			// pull request
+			checkbox24.addEventListener('change', e => {
+				const isEnabled = e.target.checked;
+				RTRememberSpeed = isEnabled;
+				selectRememberSpeed.toggleAttribute('hidden', !isEnabled);
+				document.querySelector(".rt-rememberSpeedBypassDiv").toggleAttribute('hidden', !isEnabled);
+				if (isEnabled) {
+					RememberSpeed();
+					setPlaybackSpeedNow();
+				}
+			});
+			checkboxRememberSpeedBypass.addEventListener('change', e => {
+				const isBypass = e.target.checked;
+				RTRememberSpeedBypass = isBypass;
+				RTSelectRememberSpeedLevel = selectRememberSpeed.value;
+				populateSpeedSelect(isBypass);
+				setPlaybackSpeedNow();
+			});
+			selectRememberSpeed.addEventListener('change', e => (RTSelectRememberSpeedLevel = e.target.value, setPlaybackSpeedNow()));
+
 			checkbox1.addEventListener('change', e => document.querySelectorAll(".rt-colorWatched").forEach(x => x.toggleAttribute('hidden', !e.target.checked)))
 			checkbox3.addEventListener('change', e => document.querySelector(".rt-settingsDateOnVideoBackgroundDiv").toggleAttribute('hidden', !e.target.checked))
 
@@ -692,7 +755,7 @@
 			'html[dark], [dark] {--ytd-searchbox-legacy-border-color: var(--YT-searchBorder-color)}' +
 			'html[dark], [dark] {--ytd-searchbox-legacy-button-border-color: var(--YT-searchBorder-color)}' +
 			'html[dark], [dark] {--yt-spec-static-brand-red: var(--YT-videoProgress-color)} .YtThumbnailOverlayProgressBarHostWatchedProgressBarSegmentModern {background: var(--YT-videoProgress-color)}' + // Цвет прогресса просмотренных видео
-			'.ytp-swatch-background-color, #progress.ytd-thumbnail-overlay-resume-playback-renderer {background: var(--YT-videoProgress-color) !important} .ytp-load-progress {transition: transform 1.5s ease-in-out}' + // Полоска прогресса видео + плавная прогрузка
+			'.ytp-swatch-background-color, #progress.ytd-thumbnail-overlay-resume-playback-renderer, .ytThumbnailOverlayProgressBarHostWatchedProgressBarSegment {background: var(--YT-videoProgress-color) !important} .ytp-load-progress {transition: transform 1.5s ease-in-out}' + // Полоска прогресса видео + плавная прогрузка
 			'.ytp-live-badge[disabled]:before {background: var(--YT-videoProgress-color) !important}' + // Круглый значок 'В эфире'
 			'#ytp-id-17, #ytp-id-18, #ytp-id-19, .ytp-popup {background: var(--YT-overlayMenu-color) !important; backdrop-filter: blur(15px)}' + // Цвет фона настроек видео
 			'html[dark], [dark] {--yt-spec-wordmark-text: var(--YT-iconText-color)}' + // Надпись возле иконки ютуба
@@ -736,7 +799,7 @@
 			'html[dark], [dark] { --yt-spec-static-brand-white: var(--YT-text-color) }' +  // Цвет текста в чате на стриме
 			'.yt-spec-button-shape-next--mono.yt-spec-button-shape-next--tonal, .yt-spec-button-shape-next--mono.yt-spec-button-shape-next--filled { background-color: var(--YT-additional-color) }' + // Цвет фона лайков и прочих кнопок
 			'html[dark] ::selection { background: var(--YT-hoverAndPanels2-color) !important; }' + // Цвет выделения текста
-			'::-webkit-scrollbar {width: 9px; height: 9px; background-color: var(--YT-main-color);}' + // Скроллбар
+			'::-webkit-scrollbar {width: 9px; height: 9px; background-color: var(--YT-main-color) !important} html, ytd-app {scrollbar-color: unset !important}' + // Скроллбар
 			'.yt-spec-button-shape-next--mono.yt-spec-button-shape-next--tonal, .yt-spec-button-shape-next--mono.yt-spec-button-shape-next--filled {color: var(--YT-text-color)}' + // Цвет текста кнопок (лайк, дизлайк, сохранить)
 			'#cinematics-container {display: none}' + // Отключаем профессиональное освещение
 			'#button.ytd-topbar-menu-button-renderer {color: #fff !important}' + // Цвет иконки 'Создать видео'
@@ -774,7 +837,10 @@
 			'ytd-playlist-video-renderer:not(:hover) #menu {display: none}' +
 
 			// Задняя панель где таймкоды эпизодов видео в панели справа
-			'#time.ytd-macro-markers-list-item-renderer {background-color: var(--YT-hoverAndPanels2-color) !important}'
+			'#time.ytd-macro-markers-list-item-renderer {background-color: var(--YT-hoverAndPanels2-color) !important}' +
+
+			// Цвет текста заголовков видео (от 10.07.2025)
+			'.yt-lockup-metadata-view-model-wiz__title {color: var(--YT-text-color) !important}'
 			, 'rt-paint')
 
 		// --yt-spec-text-secondary: #aaa
@@ -824,7 +890,8 @@
 			// Кнопка Аннотации и Автовыключение в настройках видео
 			'.ytp-settings-menu .ytp-panel-menu > .ytp-menuitem[role="menuitemcheckbox"], .ytp-settings-menu .ytp-panel-menu > .ytp-menuitem:has(path[d^="M16.67,4.31C19"]) {display: none !important}' +
 			'ytd-rich-section-renderer:has(a[href^="/premium/"]) {display: none !important}' +  // На главной странице, реклама с предложением подписаться на yt music премиум
-			'#newness-dot {display: none !important}' // Убирает точки новых видео на левой панели
+			'#newness-dot {display: none !important}' + // Убирает точки новых видео на левой панели
+			'#teaser-carousel:has(> .ytVideoMetadataCarouselViewModelHost) {display: none !important}' // Запись чата под видео справа от информации о видео
 			, 'rt-hideTrashStyle')
 
 		// Скрываем кнопки под видео
@@ -904,7 +971,7 @@
 			'ytd-video-meta-block:not([rich-meta]) #byline-container.ytd-video-meta-block, ytd-post-renderer[uses-compact-lockup] #author-text.yt-simple-endpoint.ytd-post-renderer, .YtSearchboxComponentInput, .ytSearchboxComponentInput, ' +
 			'#inner-background.ytd-thumbnail-overlay-endorsement-renderer {font-family: Ubuntu !important;}' +
 
-			'div.style-scope.ytd-rich-grid-row {font-weight: 400 !important;}' +
+			'div.style-scope.ytd-rich-grid-row, .yt-lockup-metadata-view-model-wiz--compact .yt-lockup-metadata-view-model-wiz__title {font-weight: 400 !important;}' +
 
 			'span.style-scope.ytd-comment-renderer, #label.ytd-toggle-theme-compact-link-renderer {font-family: Ubuntu !important; font-weight: 500 !important;}' +
 
@@ -1687,6 +1754,33 @@
 				if (RTDefaultVolume) movie_player.setVolume(RTDefaultVolumeLevel);
 			}, { capture: true });
 		})
+	}
+
+	function RememberSpeed() {
+		waitSelector('#movie_player video').then(video => {
+			video.addEventListener('loadeddata', setPlaybackSpeedNow, { capture: true });
+		});
+	}
+
+	function setPlaybackSpeedNow() {
+		if (window.location.href.includes('/shorts/')) return;
+
+		const ytPlayer = document.getElementById("movie_player") || document.getElementsByClassName("html5-video-player")[0];
+		const targetSpeed = parseFloat(RTSelectRememberSpeedLevel);
+		if (!ytPlayer || typeof ytPlayer.getAvailableQualityLabels !== 'function' || !ytPlayer.getAvailableQualityLabels()[0]) return;
+
+		if (RTRememberSpeedBypass) {
+			try {
+				const video = ytPlayer.querySelector('video');
+				if (video) video.playbackRate = targetSpeed;
+			} catch (error) {
+				console.error("[ReTube] Error setting speed via bypass:", error);
+			}
+		} else {
+			if (typeof ytPlayer.setPlaybackRate === 'function') {
+				ytPlayer.setPlaybackRate(targetSpeed);
+			}
+		}
 	}
 	//#endregion
 
