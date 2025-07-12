@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ReTube
 // @namespace 	http://tampermonkey.net/
-// @version      4.5.5
+// @version      4.5.6
 // @description ReTube
 // @author       Eject
 // @match        *://www.youtube.com/*
@@ -46,6 +46,10 @@
 	let RTDefaultVolume = await getSavedSetting('rt-defaultVolume')
 	let RTRememberSpeed = await getSavedSetting('rt-rememberSpeed')
 	let RTRememberSpeedBypass = await getSavedSetting('rt-rememberSpeedBypass')
+	let RTExpandDescription = await getSavedSetting('rt-expandDescription');
+	let RTExpandLongComments = await getSavedSetting('rt-expandLongComments');
+	let RTExpandLongReplies = await getSavedSetting('rt-expandLongReplies');
+	let RTShowAllReplies = await getSavedSetting('rt-showAllReplies');
 
 	let RTSettingsDateOnVideoBackgroundChange = await getSavedSetting('rt-settings-dateOnVideoBackgroundChange')
 	let RTColorWatchedLabelBackground = await GM_getValue('rt-color-watchedLabelBackground') ?? '#343a41'
@@ -127,6 +131,7 @@
 		if (RTtranslateCommentButton) TranslateCommentButton()
 		if (RTscrollSpeed) ScrollSpeed()
 		if (RTRememberSpeed) RememberSpeed()
+		if (RTExpandDescription || RTExpandLongComments || RTExpandLongReplies || RTShowAllReplies) ExpandContentFeatures();
 
 		if (RTcolors) PaintYouTube(true)
 		if (RTbetterFont) ImproveFont(true)
@@ -227,9 +232,12 @@
 			document.querySelector('#retube-settings-tab2').insertAdjacentHTML('beforeend', '<div><label class="retube-label" retube-tooltip="https://i.imgur.com/PyJ1GvF.png"><input type="checkbox" id="rt-checkbox20"></input>Добавить кнопку перевода комментариев</label></div>')
 			document.querySelector('#retube-settings-tab2').insertAdjacentHTML('beforeend', '<div><label class="retube-label" retube-tooltip="Правый клик: стандартная скорость||Колесо: регулировка скорости на 0.1x"><input type="checkbox" id="rt-checkbox21"></input>Изменение скорости видео на кнопке \'Настройки\'</label></div>')
 			document.querySelector('#retube-settings-tab2').insertAdjacentHTML('beforeend', `<div><label class="retube-label"><input type="checkbox" id="rt-checkbox23"></input>Принудительная громкость видео при запуске</label><select id="rt-selectDefaultVolume" class="rt-select" ${RTDefaultVolume ? '' : ' hidden'}><option value="100">100%</option><option value="80">80%</option><option value="70">70%</option><option value="60">60%</option><option value="50">50%</option><option value="40">40%</option><option value="30">30%</option><option value="20">20%</option><option value="10">10%</option><option value="5">5%</option><option value="1">1%</option><option value="0">0%</option></select></div>`)
-			// pull request
 			document.querySelector('#retube-settings-tab2').insertAdjacentHTML('beforeend', `<div><label class="retube-label"><input type="checkbox" id="rt-checkbox24"></input>Принудительная скорость видео при запуске</label><select id="rt-selectRememberSpeed" class="rt-select" ${RTRememberSpeed ? '' : ' hidden'}></select></div>`)
 			document.querySelector('#retube-settings-tab2').insertAdjacentHTML('beforeend', `<div class="rt-rememberSpeedBypassDiv retube-additionalDiv"${RTRememberSpeed ? '' : ' hidden'}><label class="retube-label" retube-tooltip="Позволяет выбирать нестандартные значения||скорости, но может работать нестабильно"><input type="checkbox" id="rt-checkboxRememberSpeedBypass"></input>Разрешить нестандартные значения</label></div>`)
+			document.querySelector('#retube-settings-tab2').insertAdjacentHTML('beforeend', '<div><label class="retube-label"><input type="checkbox" id="rt-checkboxExpandDescription"></input>Автоматически разворачивать описание видео</label></div>');
+			document.querySelector('#retube-settings-tab2').insertAdjacentHTML('beforeend', '<div><label class="retube-label"><input type="checkbox" id="rt-checkboxExpandLongComments"></input>Автоматически разворачивать длинные комментарии</label></div>');
+			document.querySelector('#retube-settings-tab2').insertAdjacentHTML('beforeend', '<div><label class="retube-label"><input type="checkbox" id="rt-checkboxExpandLongReplies"></input>Автоматически разворачивать длинные ответы</label></div>');
+			document.querySelector('#retube-settings-tab2').insertAdjacentHTML('beforeend', '<div><label class="retube-label"><input type="checkbox" id="rt-checkboxShowAllReplies"></input>Показывать все ответы на комментарии</label></div>');
 
 			document.querySelector('#retube-settings-tab2').insertAdjacentHTML('beforeend', '<br><div><label class="retube-label"><input type="checkbox" id="rt-checkbox22" class="important"></input>Автоматическая проверка обновлений скрипта</label></div>')
 
@@ -324,8 +332,12 @@
 			const checkbox21 = document.querySelector('#rt-checkbox21')
 			const checkbox22 = document.querySelector('#rt-checkbox22')
 			const checkbox23 = document.querySelector('#rt-checkbox23')
-			const checkbox24 = document.querySelector('#rt-checkbox24') // pull request
-			const checkboxRememberSpeedBypass = document.querySelector('#rt-checkboxRememberSpeedBypass') // pull request
+			const checkbox24 = document.querySelector('#rt-checkbox24')
+			const checkboxRememberSpeedBypass = document.querySelector('#rt-checkboxRememberSpeedBypass')
+			const checkboxExpandDescription = document.querySelector('#rt-checkboxExpandDescription');
+			const checkboxExpandLongComments = document.querySelector('#rt-checkboxExpandLongComments');
+			const checkboxExpandLongReplies = document.querySelector('#rt-checkboxExpandLongReplies');
+			const checkboxShowAllReplies = document.querySelector('#rt-checkboxShowAllReplies');
 			const checkboxSettings1 = document.querySelector('#rt-checkboxSettingsDateOnVideoBackground')
 			const color1 = document.querySelector('#rt-color1')
 			const color2 = document.querySelector('#rt-color2')
@@ -341,7 +353,7 @@
 			const selectVideoQuality = document.querySelector('#rt-selectVideoQuality')
 			const selectTitleIconColor = document.querySelector('#rt-selectTitleIconColor')
 			const selectDefaultVolume = document.querySelector('#rt-selectDefaultVolume')
-			const selectRememberSpeed = document.querySelector('#rt-selectRememberSpeed') // pull request
+			const selectRememberSpeed = document.querySelector('#rt-selectRememberSpeed')
 
 			checkboxMain.checked = RTcolors
 			checkboxAnimateLoad.checked = RTanimateLoad
@@ -369,9 +381,14 @@
 			checkbox21.checked = RTscrollSpeed
 			checkbox22.checked = RTUpdateCheck
 			checkbox23.checked = RTDefaultVolume
-			checkbox24.checked = RTRememberSpeed // pull request
-			checkboxRememberSpeedBypass.checked = RTRememberSpeedBypass // pull request
+			checkbox24.checked = RTRememberSpeed
+			checkboxRememberSpeedBypass.checked = RTRememberSpeedBypass
 			checkboxSettings1.checked = RTSettingsDateOnVideoBackgroundChange
+			checkboxExpandDescription.checked = RTExpandDescription;
+			checkboxExpandLongComments.checked = RTExpandLongComments;
+			checkboxExpandLongReplies.checked = RTExpandLongReplies;
+			checkboxShowAllReplies.checked = RTShowAllReplies;
+
 			color1.value = RTColorWatchedLabelBackground
 			color2.value = RTColorWatchedBackground
 
@@ -387,7 +404,6 @@
 			selectTitleIconColor.value = RTSelectTitleIconColor
 			selectDefaultVolume.value = RTDefaultVolumeLevel
 
-			// pull request
 			function populateSpeedSelect(isBypass) {
 				selectRememberSpeed.innerHTML = '';
 				const standardSpeeds = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 1.75, 2];
@@ -440,8 +456,13 @@
 				GM_setValue('rt-translateCommentButton', checkbox20.checked ? 'true' : 'false')
 				GM_setValue('rt-scrollSpeed', checkbox21.checked ? 'true' : 'false')
 				GM_setValue('rt-defaultVolume', checkbox23.checked ? 'true' : 'false')
-				GM_setValue('rt-rememberSpeed', checkbox24.checked ? 'true' : 'false') // pull request
-				GM_setValue('rt-rememberSpeedBypass', checkboxRememberSpeedBypass.checked ? 'true' : 'false') // pull request
+				GM_setValue('rt-rememberSpeed', checkbox24.checked ? 'true' : 'false')
+				GM_setValue('rt-rememberSpeedBypass', checkboxRememberSpeedBypass.checked ? 'true' : 'false')
+				GM_setValue('rt-expandDescription', checkboxExpandDescription.checked ? 'true' : 'false');
+				GM_setValue('rt-expandLongComments', checkboxExpandLongComments.checked ? 'true' : 'false');
+				GM_setValue('rt-expandLongReplies', checkboxExpandLongReplies.checked ? 'true' : 'false');
+				GM_setValue('rt-showAllReplies', checkboxShowAllReplies.checked ? 'true' : 'false');
+
 
 				GM_setValue('rt-updateCheck', checkbox22.checked ? 'true' : 'false')
 
@@ -540,8 +561,6 @@
 			checkbox18.addEventListener('change', e => { if (e.target.checked) ScrollVolume() })
 			checkbox21.addEventListener('change', e => { if (e.target.checked) ScrollSpeed() })
 			checkbox23.addEventListener('change', e => (RTDefaultVolume = e.target.checked, ForceDefaultVideoVolume(e.target.checked), selectDefaultVolume.toggleAttribute('hidden', !e.target.checked)));
-
-			// pull request
 			checkbox24.addEventListener('change', e => {
 				const isEnabled = e.target.checked;
 				RTRememberSpeed = isEnabled;
@@ -560,6 +579,10 @@
 				setPlaybackSpeedNow();
 			});
 			selectRememberSpeed.addEventListener('change', e => (RTSelectRememberSpeedLevel = e.target.value, setPlaybackSpeedNow()));
+			checkboxExpandDescription.addEventListener('change', e => RTExpandDescription = e.target.checked);
+			checkboxExpandLongComments.addEventListener('change', e => RTExpandLongComments = e.target.checked);
+			checkboxExpandLongReplies.addEventListener('change', e => RTExpandLongReplies = e.target.checked);
+			checkboxShowAllReplies.addEventListener('change', e => RTShowAllReplies = e.target.checked);
 
 			checkbox1.addEventListener('change', e => document.querySelectorAll(".rt-colorWatched").forEach(x => x.toggleAttribute('hidden', !e.target.checked)))
 			checkbox3.addEventListener('change', e => document.querySelector(".rt-settingsDateOnVideoBackgroundDiv").toggleAttribute('hidden', !e.target.checked))
@@ -1781,6 +1804,63 @@
 				ytPlayer.setPlaybackRate(targetSpeed);
 			}
 		}
+	}
+
+	function ExpandContentFeatures() {
+		function isVisible(elem) {
+			if (!elem) return false;
+			return !!(elem.offsetWidth || elem.offsetHeight || elem.getClientRects().length);
+		}
+
+		function doExpandDescription() {
+			if (!RTExpandDescription) return;
+			const btn = document.querySelector("#description.ytd-watch-metadata #expand");
+			if (btn && isVisible(btn)) {
+				btn.click();
+			}
+		}
+
+		function doExpandCommentsAndReplies() {
+			if (RTExpandLongComments) {
+				document.querySelectorAll("#post tp-yt-paper-button#more:not([hidden]) > .more-button, ytd-comment-thread-renderer > ytd-comment-view-model#comment tp-yt-paper-button#more:not([hidden]) > .more-button").forEach(btn => btn.click());
+			}
+			if (RTExpandLongReplies) {
+				document.querySelectorAll("ytd-comment-view-model[is-reply] tp-yt-paper-button#more:not([hidden]) > .more-button").forEach(btn => btn.click());
+			}
+		}
+
+		function doShowAllReplies() {
+			if (!RTShowAllReplies) return;
+			const moreRepliesSelector = "ytd-continuation-item-renderer:not([hidden])";
+			document.querySelectorAll(`${moreRepliesSelector} button.yt-spec-button-shape-next, ${moreRepliesSelector} tp-yt-paper-button`).forEach(btn => {
+				if (!btn.hasAttribute('rt-clicked')) {
+					btn.click();
+					btn.setAttribute('rt-clicked', 'true');
+				}
+			});
+			document.querySelectorAll("ytd-continuation-item-renderer[hidden] [rt-clicked]").forEach(btn => {
+				btn.removeAttribute('rt-clicked');
+			});
+		}
+
+		const observer = new MutationObserver(debounce(() => {
+			doExpandDescription();
+			doExpandCommentsAndReplies();
+			doShowAllReplies();
+		}, 300));
+
+		runOnPageInitOrTransition(() => {
+			setTimeout(() => {
+				doExpandDescription();
+				doExpandCommentsAndReplies();
+				doShowAllReplies();
+				observer.observe(document.body, { childList: true, subtree: true });
+			}, 1500);
+		});
+
+		document.addEventListener('yt-navigate-start', () => {
+			observer.disconnect();
+		}, true);
 	}
 	//#endregion
 
