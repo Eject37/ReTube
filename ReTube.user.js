@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ReTube
 // @namespace 	http://tampermonkey.net/
-// @version      4.5.5
+// @version      4.6.0
 // @description ReTube
 // @author       Eject
 // @match        *://www.youtube.com/*
@@ -46,6 +46,7 @@
 	let RTDefaultVolume = await getSavedSetting('rt-defaultVolume')
 	let RTRememberSpeed = await getSavedSetting('rt-rememberSpeed')
 	let RTRememberSpeedBypass = await getSavedSetting('rt-rememberSpeedBypass')
+	let RTFixesForNewYouTube = await getSavedSetting('rt-fixesForNewYouTube')
 
 	let RTSettingsDateOnVideoBackgroundChange = await getSavedSetting('rt-settings-dateOnVideoBackgroundChange')
 	let RTColorWatchedLabelBackground = await GM_getValue('rt-color-watchedLabelBackground') ?? '#343a41'
@@ -96,8 +97,8 @@
 		})
 	}
 
-	if (RTDefaultVolume) ForceDefaultVideoVolume(true)
 	if (RThideAllTrash) HideTrash(true)
+	if (RTDefaultVolume) ForceDefaultVideoVolume(true)
 	if (RTvideoDateCreated) finishEvent(() => DateTimeCreated(true, RTSettingsDateOnVideoBackgroundChange))
 	if (RTstopChannelTrailer) StopChannelTrailer()
 	if (RTvideoQuality) VideoQuality()
@@ -132,6 +133,7 @@
 		if (RTbetterFont) ImproveFont(true)
 		if (RTwatchedVideo && !window.location.href.includes('feed/history')) MarkWatchedVideos(true)
 		if (RTreturnDislikes) ReturnDislikes()
+		if (RTFixesForNewYouTube) FixesForNewYouTube(true)
 
 		await Delay(3000)
 		document.querySelector('#rtAnim')?.remove()
@@ -231,6 +233,7 @@
 			document.querySelector('#retube-settings-tab2').insertAdjacentHTML('beforeend', `<div><label class="retube-label"><input type="checkbox" id="rt-checkbox24"></input>Принудительная скорость видео при запуске</label><select id="rt-selectRememberSpeed" class="rt-select" ${RTRememberSpeed ? '' : ' hidden'}></select></div>`)
 			document.querySelector('#retube-settings-tab2').insertAdjacentHTML('beforeend', `<div class="rt-rememberSpeedBypassDiv retube-additionalDiv"${RTRememberSpeed ? '' : ' hidden'}><label class="retube-label" retube-tooltip="Позволяет выбирать нестандартные значения||скорости, но может работать нестабильно"><input type="checkbox" id="rt-checkboxRememberSpeedBypass"></input>Разрешить нестандартные значения</label></div>`)
 
+			document.querySelector('#retube-settings-tab1').insertAdjacentHTML('beforeend', '<div><label class="retube-label" retube-tooltip="Возвращеает/исправляет некоторые функции:||• возможность скрола в полноэкранном режиме||• 4 видео в ряду на главной странице"><input type="checkbox" id="rt-checkbox25"></input>Вернуть старые функции</label></div>')
 			document.querySelector('#retube-settings-tab2').insertAdjacentHTML('beforeend', '<br><div><label class="retube-label"><input type="checkbox" id="rt-checkbox22" class="important"></input>Автоматическая проверка обновлений скрипта</label></div>')
 
 			document.querySelector('#retube-tab1').insertAdjacentHTML('beforeend', '<br><button class="retube-button retube-button-save">Сохранить</button>')
@@ -326,6 +329,7 @@
 			const checkbox23 = document.querySelector('#rt-checkbox23')
 			const checkbox24 = document.querySelector('#rt-checkbox24') // pull request
 			const checkboxRememberSpeedBypass = document.querySelector('#rt-checkboxRememberSpeedBypass') // pull request
+			const checkbox25 = document.querySelector('#rt-checkbox25')
 			const checkboxSettings1 = document.querySelector('#rt-checkboxSettingsDateOnVideoBackground')
 			const color1 = document.querySelector('#rt-color1')
 			const color2 = document.querySelector('#rt-color2')
@@ -371,6 +375,7 @@
 			checkbox23.checked = RTDefaultVolume
 			checkbox24.checked = RTRememberSpeed // pull request
 			checkboxRememberSpeedBypass.checked = RTRememberSpeedBypass // pull request
+			checkbox25.checked = RTFixesForNewYouTube
 			checkboxSettings1.checked = RTSettingsDateOnVideoBackgroundChange
 			color1.value = RTColorWatchedLabelBackground
 			color2.value = RTColorWatchedBackground
@@ -442,6 +447,7 @@
 				GM_setValue('rt-defaultVolume', checkbox23.checked ? 'true' : 'false')
 				GM_setValue('rt-rememberSpeed', checkbox24.checked ? 'true' : 'false') // pull request
 				GM_setValue('rt-rememberSpeedBypass', checkboxRememberSpeedBypass.checked ? 'true' : 'false') // pull request
+				GM_setValue('rt-fixesForNewYouTube', checkbox25.checked ? 'true' : 'false')
 
 				GM_setValue('rt-updateCheck', checkbox22.checked ? 'true' : 'false')
 
@@ -540,6 +546,7 @@
 			checkbox18.addEventListener('change', e => { if (e.target.checked) ScrollVolume() })
 			checkbox21.addEventListener('change', e => { if (e.target.checked) ScrollSpeed() })
 			checkbox23.addEventListener('change', e => (RTDefaultVolume = e.target.checked, ForceDefaultVideoVolume(e.target.checked), selectDefaultVolume.toggleAttribute('hidden', !e.target.checked)));
+			checkbox25.addEventListener('change', e => FixesForNewYouTube(e.target.checked))
 
 			// pull request
 			checkbox24.addEventListener('change', e => {
@@ -763,7 +770,7 @@
 			'svg.external-icon > svg > g > path:nth-child(1), #card svg g g path:nth-child(1) {fill: var(--YT-icon-color)}' + // Иконка ютуба старый дизайн
 			'#logo-icon > svg > g > g:nth-child(1) > path:nth-child(1) {fill: var(--YT-icon-color)}' + // Иконка ютуба очень старый дизайн
 			'.html5-video-player {background: var(--YT-player-color)}' + // Цвет фона плеера
-			'#time-status.ytd-thumbnail-overlay-time-status-renderer, .badge-shape-wiz--default.badge-shape-wiz--overlay, .badge-shape-wiz--thumbnail-default {background: var(--YT-videoTime-color); backdrop-filter: blur(10px)}' + // Фон рамки с длительносьтю видео
+			'#time-status.ytd-thumbnail-overlay-time-status-renderer, .badge-shape-wiz--default.badge-shape-wiz--overlay, .badge-shape-wiz--thumbnail-default, .yt-badge-shape {background: var(--YT-videoTime-color); backdrop-filter: blur(10px)}' + // Фон рамки с длительносьтю видео
 			'.badge-shape-wiz--live.badge-shape-wiz--overlay {background: var(--YT-HD4KBadge-color); backdrop-filter: blur(10px)}' + // Фон рамки 'В эфире'
 			'.yt-spec-icon-badge-shape--type-notification .yt-spec-icon-badge-shape__badge {background-color: var(--YT-notificationsBadge-color); color: var(--YT-text-color) !important}' + // Цвет бэйджа количества уведомлений
 			'sup.ytp-swatch-color-white {color: var(--YT-link-color)}' + // Цвет надписей HD в выборе качества
@@ -842,8 +849,6 @@
 			// Цвет текста заголовков видео (от 10.07.2025)
 			'.yt-lockup-metadata-view-model-wiz__title {color: var(--YT-text-color) !important}'
 			, 'rt-paint')
-
-		// --yt-spec-text-secondary: #aaa
 	}
 
 	function HideTrash(hide) {
@@ -872,7 +877,7 @@
 			'.sbfl_a, .YtSearchboxComponentReportButton, .ytSearchboxComponentReportButton {display: none !important}' + // Надпись пожаловаться на поисковые подсказки
 			'[role="button"][aria-label="Добавить в очередь"], [role="button"][aria-label="Додати в чергу"] {display: none}' + // Кнопка на видео добавить в очередь
 			'.gsst_a, .YtSearchboxComponentYtdTextInputAssistantWrapper, .ytSearchboxComponentYtdTextInputAssistantWrapper {display: none !important}' + // Кнопка клавиатуры при поиске видео
-			'button[title="Автовоспроизведение выключено"], button[title="Автоматичне відтворення вимкнено"] {display: none !important}' + // Кнопка выключенного автовоспроизвидения в плеере
+			'button[title="Автовоспроизведение выключено"], button[title="Автоматичне відтворення вимкнено"], .ytp-button:has(.ytp-autonav-toggle-button[aria-checked="false"]) {display: none !important}' + // Кнопка выключенного автовоспроизвидения в плеере
 			'button[title="Субтитры недоступны"], button[title="Субтитри недоступні"] {display: none !important}' + // Кнопка субтитров если они не доступны в плеере
 			'.ytp-button.ytp-remote-button {display: none !important}' + // Кнопка трансляции на телевизор в плеере
 			'.ytp-button.ytp-miniplayer-button {display: none !important}' + // Кнопка мини-плеера в плеере
@@ -921,30 +926,30 @@
 			return
 		}
 
-		pushCSS(`#progress.ytd-thumbnail-overlay-resume-playback-renderer {--background-color: ${RTColorWatchedBackground + '80'}}` +
-			'#progress.ytd-thumbnail-overlay-resume-playback-renderer:after {content: " " !important;top: -280px !important;position: absolute !important;background-color: var(--background-color) !important;padding: 7px !important; width: 100%;height: 10000%; animation: 0.5s show ease;}' +
-			`#progress.ytd-thumbnail-overlay-resume-playback-renderer {--label-color: ${RTColorWatchedLabelBackground + '80'}}` +
-			'#progress.ytd-thumbnail-overlay-resume-playback-renderer:before {content: "ПРОСМОТРЕНО"; background-color: var(--label-color); top: -112px;font-size: 12px;color: white;position: absolute;z-index: 1;left: 0; margin: 8px;opacity: 1;padding: 4px 5px; border-radius: 9px;font-weight: 500;line-height: 1.2rem; backdrop-filter: blur(4px); animation: 0.5s show ease;}' +
+		pushCSS(`yt-thumbnail-overlay-progress-bar-view-model, ytd-thumbnail-overlay-resume-playback-renderer {--background-color: ${RTColorWatchedBackground + '80'}}` +
+			'ytd-thumbnail-overlay-resume-playback-renderer::after {content: " " !important;top: -280px !important;position: absolute !important;background-color: var(--background-color) !important;padding: 7px !important; width: 100%;height: 10000%; animation: 0.5s show ease;}' +
+			`yt-thumbnail-overlay-progress-bar-view-model, ytd-thumbnail-overlay-resume-playback-renderer {--label-color: ${RTColorWatchedLabelBackground + '80'}}` +
+			'ytd-thumbnail-overlay-resume-playback-renderer:before {content: "ПРОСМОТРЕНО"; background-color: var(--label-color); top: -112px;font-size: 12px;color: white;position: absolute;z-index: 1;left: 0; margin: 8px;opacity: 1;padding: 4px 5px; border-radius: 9px;font-weight: 500;line-height: 1.2rem; backdrop-filter: blur(4px); animation: 0.5s show ease;}' +
 			'ytd-thumbnail-overlay-time-status-renderer {z-index: 1}' +
 			'#overlays > ytd-thumbnail-overlay-playback-status-renderer {display: none !important;}' +
-			'ytd-expanded-shelf-contents-renderer #progress.ytd-thumbnail-overlay-resume-playback-renderer:after, ytd-video-renderer  #progress.ytd-thumbnail-overlay-resume-playback-renderer:after {top: -134px !important;width: 232px;height: 120px;}' +
-			//'ytd-expanded-shelf-contents-renderer #progress.ytd-thumbnail-overlay-resume-playback-renderer:before, ytd-video-renderer #progress.ytd-thumbnail-overlay-resume-playback-renderer:before {top: -134px; font-size: 13px;}' +
-			'#related #progress.ytd-thumbnail-overlay-resume-playback-renderer:after {top: -90px !important;width: 154px; height: 76px;}' +
-			'#related #progress.ytd-thumbnail-overlay-resume-playback-renderer:before {top: -90px;font-size: 11px; padding: 3px 4px;}' +
-			'.style-scope.ytd-grid-video-renderer:hover #progress.ytd-thumbnail-overlay-resume-playback-renderer:before, .style-scope.ytd-grid-video-renderer:hover #progress.ytd-thumbnail-overlay-resume-playback-renderer:after, div#dismissible.style-scope.ytd-video-renderer:hover #progress.ytd-thumbnail-overlay-resume-playback-renderer:after, div#dismissible.style-scope.ytd-video-renderer:hover #progress.ytd-thumbnail-overlay-resume-playback-renderer:before, div#dismissible.style-scope.ytd-compact-video-renderer:hover #progress.ytd-thumbnail-overlay-resume-playback-renderer:after, div#dismissible.style-scope.ytd-compact-video-renderer:hover #progress.ytd-thumbnail-overlay-resume-playback-renderer:before {display: none;}' +
+			'ytd-expanded-shelf-contents-renderer ytd-thumbnail-overlay-resume-playback-renderer:after, ytd-video-renderer  ytd-thumbnail-overlay-resume-playback-renderer:after {top: -134px !important;width: 232px;height: 120px;}' +
+			//'ytd-expanded-shelf-contents-renderer ytd-thumbnail-overlay-resume-playback-renderer:before, ytd-video-renderer ytd-thumbnail-overlay-resume-playback-renderer:before {top: -134px; font-size: 13px;}' +
+			'#related ytd-thumbnail-overlay-resume-playback-renderer:after {top: -90px !important;width: 154px; height: 76px;}' +
+			'#related ytd-thumbnail-overlay-resume-playback-renderer:before {top: -90px;font-size: 11px; padding: 3px 4px;}' +
+			'.style-scope.ytd-grid-video-renderer:hover ytd-thumbnail-overlay-resume-playback-renderer:before, .style-scope.ytd-grid-video-renderer:hover ytd-thumbnail-overlay-resume-playback-renderer:after, div#dismissible.style-scope.ytd-video-renderer:hover ytd-thumbnail-overlay-resume-playback-renderer:after, div#dismissible.style-scope.ytd-video-renderer:hover ytd-thumbnail-overlay-resume-playback-renderer:before, div#dismissible.style-scope.ytd-compact-video-renderer:hover ytd-thumbnail-overlay-resume-playback-renderer:after, div#dismissible.style-scope.ytd-compact-video-renderer:hover ytd-thumbnail-overlay-resume-playback-renderer:before {display: none;}' +
 			'.ytrp_rb_bg_bottom {bottom: unset !important; top: 0 !important;}' +
 			'html .resume-playback-background, html  .resume-playback-progress-bar, html ytd-thumbnail-overlay-resume-playback-renderer {top: unset !important; bottom: 0 !important;}' +
-			'.ytd-playlist-panel-video-renderer #progress.ytd-thumbnail-overlay-resume-playback-renderer::after {width: 92px; height: 48px; top: -52px !important; padding: 4px !important;}' +
-			'.ytd-playlist-video-renderer #progress.ytd-thumbnail-overlay-resume-playback-renderer::after {top: -52px; padding: 4px}' +
-			'.ytd-playlist-panel-video-renderer #progress.ytd-thumbnail-overlay-resume-playback-renderer::before {top: -52px; font-size: 9px; line-height: 1rem; margin: 4px; padding: 4px;}' +
-			'.ytd-playlist-video-renderer #progress.ytd-thumbnail-overlay-resume-playback-renderer::before {top: -83px; font-size: 9px; line-height: 1rem; margin: 4px; padding: 4px;}' +
-			'.ytd-playlist-panel-video-renderer:hover .ytd-playlist-panel-video-renderer #progress.ytd-thumbnail-overlay-resume-playback-renderer::before, .ytd-playlist-panel-video-renderer:hover .ytd-playlist-panel-video-renderer #progress.ytd-thumbnail-overlay-resume-playback-renderer::after {display: none;}' +
-			'.ytd-playlist-video-renderer:hover .ytd-playlist-video-renderer #progress.ytd-thumbnail-overlay-resume-playback-renderer::before, .ytd-playlist-video-renderer:hover .ytd-playlist-video-renderer #progress.ytd-thumbnail-overlay-resume-playback-renderer::after {display: none;}' +
-			`.ytd-rich-grid-media #progress.ytd-thumbnail-overlay-resume-playback-renderer, .ytd-search ytd-video-renderer #progress.ytd-thumbnail-overlay-resume-playback-renderer {--label-color: ${RTColorWatchedLabelBackground + '80'}}` +
-			`.ytd-rich-grid-media #progress.ytd-thumbnail-overlay-resume-playback-renderer::before, .ytd-search ytd-video-renderer #progress.ytd-thumbnail-overlay-resume-playback-renderer::before {content: "ПРОСМОТРЕНО"; top: -95px; background-color: var(--label-color); font-size: 14px; color: white; position: absolute; z-index: 1;left: 2px; opacity: 1; font-weight: 500; line-height: 1.5rem; margin: -65px 10px; padding: 4px 5px; border-radius: 9px; backdrop-filter: blur(4px); animation: 0.5s show ease;}` +
-			`.ytd-rich-grid-media #progress.ytd-thumbnail-overlay-resume-playback-renderer, .ytd-search #progress.ytd-thumbnail-overlay-resume-playback-renderer {--background-color: ${RTColorWatchedBackground + '80'}}` +
-			'.ytd-rich-grid-media #progress.ytd-thumbnail-overlay-resume-playback-renderer::after, .ytd-search #progress.ytd-thumbnail-overlay-resume-playback-renderer::after {width: 100%;height: 30vh; content: " " !important;top: -30vh !important;position: absolute !important;background-color: var(--background-color) !important;padding: 7px !important; animation: 0.5s show ease;}' +
-			'.ytd-rich-grid-media:hover #progress.ytd-thumbnail-overlay-resume-playback-renderer::before, .ytd-rich-grid-media:hover #progress.ytd-thumbnail-overlay-resume-playback-renderer::after {display: none;}' +
+			'.ytd-playlist-panel-video-renderer ytd-thumbnail-overlay-resume-playback-renderer::after {width: 92px; height: 48px; top: -52px !important; padding: 4px !important;}' +
+			'.ytd-playlist-video-renderer ytd-thumbnail-overlay-resume-playback-renderer::after {top: -52px; padding: 4px}' +
+			'.ytd-playlist-panel-video-renderer ytd-thumbnail-overlay-resume-playback-renderer::before {top: -52px; font-size: 9px; line-height: 1rem; margin: 4px; padding: 4px;}' +
+			'.ytd-playlist-video-renderer ytd-thumbnail-overlay-resume-playback-renderer::before {top: -83px; font-size: 9px; line-height: 1rem; margin: 4px; padding: 4px;}' +
+			'.ytd-playlist-panel-video-renderer:hover .ytd-playlist-panel-video-renderer ytd-thumbnail-overlay-resume-playback-renderer::before, .ytd-playlist-panel-video-renderer:hover .ytd-playlist-panel-video-renderer ytd-thumbnail-overlay-resume-playback-renderer::after {display: none;}' +
+			'.ytd-playlist-video-renderer:hover .ytd-playlist-video-renderer ytd-thumbnail-overlay-resume-playback-renderer::before, .ytd-playlist-video-renderer:hover .ytd-playlist-video-renderer ytd-thumbnail-overlay-resume-playback-renderer::after {display: none;}' +
+			`yt-thumbnail-view-model ytd-thumbnail-overlay-resume-playback-renderer, .ytd-search ytd-video-renderer ytd-thumbnail-overlay-resume-playback-renderer {--label-color: ${RTColorWatchedLabelBackground + '80'}}` +
+			`yt-thumbnail-overlay-progress-bar-view-model::before, yt-thumbnail-view-model ytd-thumbnail-overlay-resume-playback-renderer::before, .ytd-search ytd-video-renderer ytd-thumbnail-overlay-resume-playback-renderer::before {content: "ПРОСМОТРЕНО"; top: -95px; background-color: var(--label-color); font-size: 14px; color: white; position: absolute; z-index: 1;left: 2px; opacity: 1; font-weight: 500; line-height: 1.5rem; margin: -65px 10px; padding: 4px 5px; border-radius: 9px; backdrop-filter: blur(4px); animation: 0.5s show ease;}` +
+			`yt-thumbnail-view-model ytd-thumbnail-overlay-resume-playback-renderer, .ytd-search ytd-thumbnail-overlay-resume-playback-renderer {--background-color: ${RTColorWatchedBackground + '80'}}` +
+			'yt-thumbnail-view-model ytd-thumbnail-overlay-resume-playback-renderer::after, .ytd-search ytd-thumbnail-overlay-resume-playback-renderer::after, yt-thumbnail-overlay-progress-bar-view-model::after {width: 100%;height: 30vh; content: " " !important;top: -28vh !important;position: absolute !important;background-color: var(--background-color) !important;padding: 7px !important; animation: 0.5s show ease;}' +
+			'yt-thumbnail-view-model:hover ytd-thumbnail-overlay-resume-playback-renderer::before, yt-thumbnail-view-model:hover ytd-thumbnail-overlay-resume-playback-renderer::after, yt-thumbnail-view-model:hover yt-thumbnail-overlay-progress-bar-view-model::after, yt-thumbnail-view-model:hover yt-thumbnail-overlay-progress-bar-view-model::before {display: none;}' +
 			'@keyframes show { from { opacity: 0; } to { opacity: 1; } }'
 			, 'rt-watchedVideoStyle')
 	}
@@ -969,7 +974,7 @@
 			'#channel-handle.ytd-active-account-header-renderer, ytd-active-account-header-renderer[enable-handles-account-menu-switcher] #account-name.ytd-active-account-header-renderer, ' +
 			'.yt-video-attribute-view-model__subtitle, .yt-video-attribute-view-model__secondary-subtitle, .title.reel-player-header-renderer, .ytStorybookReelMultiFromatLinkViewModelLink, ' +
 			'ytd-video-meta-block:not([rich-meta]) #byline-container.ytd-video-meta-block, ytd-post-renderer[uses-compact-lockup] #author-text.yt-simple-endpoint.ytd-post-renderer, .YtSearchboxComponentInput, .ytSearchboxComponentInput, ' +
-			'#inner-background.ytd-thumbnail-overlay-endorsement-renderer {font-family: Ubuntu !important;}' +
+			'#inner-background.ytd-thumbnail-overlay-endorsement-renderer, .yt-content-metadata-view-model__metadata-text {font-family: Ubuntu !important;}' +
 
 			'div.style-scope.ytd-rich-grid-row, .yt-lockup-metadata-view-model-wiz--compact .yt-lockup-metadata-view-model-wiz__title {font-weight: 400 !important;}' +
 
@@ -999,7 +1004,7 @@
 			'yt-formatted-string.style-scope.ytd-video-renderer, a.yt-simple-endpoint.style-scope.ytd-grid-playlist-renderer, span.ytp-caption-segment, a.ytp-title-link.yt-uix-sessionlink.ytp-title-fullerscreen-link, div.ytp-menuitem-label, ' +
 			'#simplebox-placeholder.ytd-comment-simplebox-renderer, #label.ytd-playlist-add-to-option-renderer, .ytd-menu-title-renderer, #rt-videoCount, #content.ytd-channel-tagline-renderer, #first-link.ytd-channel-header-links-view-model, ' +
 			'#more.ytd-channel-header-links-view-model, .yt-spec-button-shape-next--call-to-action-inverse.yt-spec-button-shape-next--text, .yt-attribution-view-model-wiz--medium-text .yt-attribution-view-model-wiz__suffix, ' +
-			'.YtSuggestionComponentBold, .yt-lockup-metadata-view-model-wiz--standard .yt-lockup-metadata-view-model-wiz__title' +
+			'.YtSuggestionComponentBold, .yt-lockup-metadata-view-model-wiz--standard .yt-lockup-metadata-view-model-wiz__title, .yt-lockup-metadata-view-model__title, .yt-lockup-metadata-view-model__title' +
 			'{font-family: "Ubuntu" !important; font-weight: 400 !important;}' +
 
 			'.tp-yt-paper-tooltip[style-target=tooltip] {font-size: 1.35rem !important}' +
@@ -1013,7 +1018,7 @@
 			'.more-button.ytd-comment-view-model, .less-button.ytd-comment-view-model, .YtChipShapeChip, ytd-thumbnail-overlay-bottom-panel-renderer, ' +
 			'ytd-thumbnail-overlay-toggle-button-renderer[use-expandable-tooltip] #label.ytd-thumbnail-overlay-toggle-button-renderer, .ShortsLockupViewModelHostOutsideMetadataTitle,' +
 			'ytd-thumbnail-overlay-hover-text-renderer, .ytChipShapeChip, .shortsLockupViewModelHostOutsideMetadataTitle, .shortsLockupViewModelHostMetadataSubhead,' +
-			'.ytChipShapeText {font-family: "Ubuntu Light Custom" !important}' +
+			'.ytChipShapeText, .yt-tab-shape-wiz__tab, .animatedRollingNumberHost, .yt-list-item-view-model__title, .yt-badge-shape, .yt-tab-shape__tab {font-family: "Ubuntu Light Custom" !important}' +
 
 			'ytd-watch-metadata[title-headline-xs] h1.ytd-watch-metadata {font-family: "YouTube Sans"; font-weight: 600}'
 			, 'rt-betterFontStyle')
@@ -1281,7 +1286,7 @@
 			'.ytp-videowall-still-info-content {background-image: -moz-linear-gradient(top,rgba(12,12,12,0.8) 0,transparent 200px) !important; background-image: -ms-linear-gradient(top,rgba(12,12,12,0.8) 0,transparent 200px) !important; background-image: -o-linear-gradient(top,rgba(12,12,12,0.8) 0,transparent 200px) !important; background-image: -webkit-linear-gradient(top,rgba(12,12,12,0.8) 0,transparent 200px) !important; background-image: linear-gradient(to bottom,rgba(12,12,12,0.8) 0,transparent 200px) !important}' + // Темный фон для текста элементов плитки, которая показывается в конце видео (мы его начали показывать целиком в коде выше)
 			'#video-title.ytd-playlist-panel-video-renderer {max-height: unset !important; -webkit-line-clamp: unset !important}' + // Для плейлистов
 			'ytd-playlist-video-renderer #progress.ytd-thumbnail-overlay-resume-playback-renderer::before {top: -66px; font-size: 9px}' + // Для плейлистов
-			'#video-title.ytd-rich-grid-video-renderer {max-height: unset !important; overflow: unset !important; -webkit-line-clamp: unset !important}' + // Для нового дизайна главной страницы
+			'#video-title.ytd-rich-grid-video-renderer, .yt-lockup-metadata-view-model__title {max-height: unset !important; overflow: unset !important; -webkit-line-clamp: unset !important}' + // Для нового дизайна главной страницы
 			'#video-title.ytd-rich-grid-media {-webkit-line-clamp: unset !important; max-height: unset !important}' + // Для главной страницы с рекомендациями
 			'h4.ytd-macro-markers-list-item-renderer {max-height: unset !important; -webkit-line-clamp: unset !important}' // Отображение заголовка целиком в списке участков видео
 			, 'rt-fullVideoNamesStyle')
@@ -1781,6 +1786,37 @@
 				ytPlayer.setPlaybackRate(targetSpeed);
 			}
 		}
+	}
+	function FixesForNewYouTube(enabled) {
+		if (!enabled) {
+			document.querySelector('#rt-fixesForNewYouTube')?.remove()
+			return
+		}
+
+		pushCSS(
+			// скрол в полноэкранном режиме
+			`
+        	ytd-app[fullscreen] {
+        	    overflow: auto !important;
+        	}
+        	ytd-app[scrolling] {
+        	    position: absolute !important;
+        	    top: 0 !important;
+        	    left: 0 !important;
+        	    right: calc((var(--ytd-app-fullerscreen-scrollbar-width) + 1px)*-1) !important;
+        	    bottom: 0 !important;
+        	    overflow-x: auto !important;
+        	}
+        	ytd-watch-flexy[fullscreen] #single-column-container.ytd-watch-flexy,
+        	ytd-watch-flexy[fullscreen] #columns.ytd-watch-flexy {
+        	    display: flex !important;
+        	}`
+			+
+			// 4 видео на главной странице вместо 3х
+			'#primary > .ytd-two-column-browse-results-renderer {--ytd-rich-grid-items-per-row: 4 !important}' +
+			'ytd-rich-item-renderer[rendered-from-rich-grid][is-in-first-column] {margin-left: calc(var(--ytd-rich-grid-item-margin)/2) !important}' +
+			'#contents.ytd-rich-grid-renderer {margin-left: 40px}'
+			, 'rt-fixesForNewYouTube')
 	}
 	//#endregion
 
