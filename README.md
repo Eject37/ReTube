@@ -1,8 +1,8 @@
-**[Установить последнюю версию](https://github.com/Eject37/ReTube/raw/main/ReTube.user.js)</br>**
-[Поддержать разработку](https://eject37.github.io/)</br>
-[Discord сервер](https://discord.gg/8baJSRxXSm)
+**[Установить последнюю версию](https://github.com/Eject37/ReTube/raw/main/ReTube.user.js)</br></br>**
+[Поддержать разработку](https://t.me/eject_tweaks/10)</br>
+[Telegram канал](https://t.me/eject_tweaks/10)
 
-**Поддержка скрипта временно приостановлена, обновления будут только по возможности.**
+**Актуальная версия скрипта: https://t.me/eject_tweaks/10**
 
 Установка возможна любым менеджером скриптов, например [Violentmonkey](https://violentmonkey.github.io/get-it/), в Tampermonkey встречаются проблемы
 </br>
